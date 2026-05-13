@@ -1,4 +1,4 @@
-package grails.export
+package grails.plugins.template
 
 import grails.boot.GrailsApp
 import grails.boot.config.GrailsAutoConfiguration

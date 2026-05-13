@@ -2,6 +2,7 @@ import org.asciidoctor.gradle.jvm.AsciidoctorTask
 
 plugins {
     id 'org.asciidoctor.jvm.convert'
+    id 'config.project-metadata'
 }
 
 version = projectVersion
@@ -17,7 +18,7 @@ def asciidoctorAttributes = [
         idprefix            : '',
         idseparator         : '-',
         version             : project.version,
-        projectUrl          : "https://github.com/${rootProject.findProperty('githubOrg')}/${rootProject.findProperty('githubProject')}",
+        projectUrl          : "https://github.com/${githubOrg}/${githubProject}",
         sourcedir           : "${rootProject.allprojects.find { it.name == 'grails-plugin-template' }.projectDir}/src/main/groovy",
         grailsVersion       : grailsVersion
 ]

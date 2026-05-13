@@ -4,7 +4,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ## Code of Conduct
 
-This project has a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold it. Please report
+This project has a Code of Conduct. By participating, you are expected to uphold it. Please report
 unacceptable behavior to the project maintainers.
 
 ## Getting Started
@@ -57,7 +57,7 @@ Key architectural rules:
 ./gradlew build
 
 # Plugin unit tests only
-./gradlew :export:test
+./gradlew :grails-plugin-template:test
 
 # Integration tests (runs the example app)
 ./gradlew :app1:integrationTest
@@ -152,8 +152,9 @@ categorize changes in release notes.
 
 ## Security Vulnerabilities
 
-If you discover a security vulnerability, **do not open a public issue**. Please see [SECURITY.md](.github/SECURITY.md)
-for responsible disclosure instructions.
+If you discover a security vulnerability, **do not open a public issue**. Instead, please report it privately to the
+project maintainers and include details to help reproduce and assess the issue. Responsible disclosure helps us protect
+users while we investigate and prepare a fix.
 
 ## License
 

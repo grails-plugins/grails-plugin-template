@@ -41,27 +41,27 @@ plugin/
 │   ├── conf/
 │   │   ├── application.yml               # Plugin-specific config defaults
 │   ├── controllers/                      # Interceptors, controller-scoped artifacts
-│   │   └── org/grails/plugins/servertiming/
-│   │       └── ServerTimingInterceptor.groovy
+│   │   └── org/grails/plugins/exampleplugin/
+│   │       └── ExamplePluginInterceptor.groovy
 └── src/
     ├── main/groovy/                      # Core plugin classes
-    │   └── org/grails/plugins/servertiming/
-    │       ├── ServerTimingAutoConfiguration.groovy
-    │       ├── ServerTimingFilter.groovy
-    │       ├── ServerTimingGrailsPlugin.groovy
-    │       ├── ServerTimingResponseWrapper.groovy
+    │   └── org/grails/plugins/exampleplugin/
+    │       ├── ExamplePluginAutoConfiguration.groovy
+    │       ├── ExamplePluginFilter.groovy
+    │       ├── ExamplePluginGrailsPlugin.groovy
+    │       ├── ExamplePluginResponseWrapper.groovy
     │       ├── config/
     │       │    ├── EnabledCondition.groovy
-    │       │    └── ServerTimingConfig.groovy
+    │       │    └── ExamplePluginConfig.groovy
     │       └── core/
     │           ├── Metric.groovy
     │           └── TimingMetric.groovy
-    ├── main/resources/  
+    ├── main/resources/
     │   ├── META-INF/spring
     │   │    └── org.springframework.boot.autoconfigure.AutoConfiguration.imports
-    │   └── spring-configuration-metadata.json    
+    │   └── spring-configuration-metadata.json
     └── test/groovy/                      # Unit tests ONLY
-        └── org/grails/plugins/servertiming/
+        └── org/grails/plugins/exampleplugin/
             ├── MetricSpec.groovy
             └── TimingMetricSpec.groovy
 ```

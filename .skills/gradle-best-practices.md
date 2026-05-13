@@ -48,7 +48,7 @@ plugins {
 }
 ```
 
-The ONLY exception is the `root-publish.gradle` convention plugin, which exists solely as a workaround for a Nexus
+The ONLY exception is the `config.publish-root` convention plugin, which exists solely as a workaround for a Nexus
 publishing bug (https://github.com/gradle-nexus/publish-plugin/issues/310) that requires version/group to be set at the
 root level.
 

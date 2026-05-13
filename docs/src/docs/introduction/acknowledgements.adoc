@@ -4,5 +4,5 @@
 Following are the plugin contributors:
 
 * https://github.com/sbglasius[Søren Berg Glasius]
-* https://github.com/jdaugherty[James Dautherty]
+* https://github.com/jdaugherty[James Daugherty]
 * https://github.com/matrei[Mattias Reichel]

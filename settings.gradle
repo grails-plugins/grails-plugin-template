@@ -40,6 +40,7 @@ include('plugin')
 project(':plugin').name = 'grails-plugin-template'
 include('docs')
 project(':docs').name = 'grails-plugin-template-docs'
+include('code-coverage')
 
 file('examples').listFiles({ it.directory } as FileFilter).each {
     include(it.name)

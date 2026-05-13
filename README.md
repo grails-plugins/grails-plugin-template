@@ -1,18 +1,22 @@
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.gpc/grails-export)](https://img.shields.io/maven-central/v/io.github.gpc/grails-export)
-[![License](https://img.shields.io/github/license/gpc/grails-export)](https://www.apache.org/licenses/LICENSE-2.0)
-[![CI](https://github.com/gpc/grails-export/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/gpc/grails-export/actions/workflows/ci.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.gpc/grails-plugin-template)](https://central.sonatype.com/artifact/io.github.gpc/grails-plugin-template)
+[![License](https://img.shields.io/github/license/grails-plugins/grails-plugin-template)](https://www.apache.org/licenses/LICENSE-2.0)
+[![CI](https://github.com/grails-plugins/grails-plugin-template/actions/workflows/ci.yml/badge.svg?event=push)](https://github.com/grails-plugins/grails-plugin-template/actions/workflows/ci.yml)
 
-Grails Export Plugin
-====================
+Grails Plugin Template
+======================
 
-The official Grails Export Plugin.
+A template repository for building Grails plugins with a standardised multi-project structure,
+automated CI/CD workflows, and publishing configuration.
 
-This plugin offers export functionality supporting different formats e.g. CSV, Excel (xls, xlsx),
-Open Document Spreadsheet, PDF and XML and can be extended to add additional formats.
+Use this repository as the starting point when creating a new Grails plugin under the
+`grails-plugins` or `gpc` organisations. It provides:
+
+- Multi-project Gradle build with convention plugins in `build-logic/`
+- An example Grails app under `examples/app1/` for integration testing
+- Automated dependency updates via Dependabot and Renovate
+- GitHub Actions workflows for CI, publishing, release notes, and documentation
 
 The user guide can be found here: 📚 [Documentation]
-
-This was previously forked from [Nathan Wells]
 
 ## Installation
 
@@ -20,27 +24,10 @@ Add the following dependency to the `build.gradle` file:
 
 ### Grails 7.x
 
-```
+```groovy
 dependencies {
-    implementation("io.github.gpc:grails-export:7.0.0")
+    implementation("io.github.gpc:grails-plugin-template:1.0.0")
 }
 ```
 
-### Grails 5.x - 6.x
-
-```
-dependencies {
-    implementation("org.grails.plugins:export:2.0.0")
-}
-```
-
-### Grails 3.x - 4.x
-
-```
-dependencies {
-    compile("org.grails.plugins:export:2.0.0")
-}
-```
-
-[Documentation]: https://gpc.github.io/grails-export/
-[Nathan Wells]: https://github.com/nwwells/grails-export
+[Documentation]: https://grails-plugins.github.io/grails-plugin-template/

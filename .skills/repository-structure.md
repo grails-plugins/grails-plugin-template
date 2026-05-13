@@ -104,7 +104,7 @@ flows through convention plugins.
 plugins {
     id 'idea'
     id 'config.docs'
-    id 'config.root-publish'
+    id 'config.publish-root'
 }
 ```
 
@@ -182,7 +182,7 @@ These are available in all subprojects as project properties (`projectVersion`, 
 ./gradlew build
 
 # Plugin unit tests only
-./gradlew :export:test
+./gradlew :grails-plugin-template:test
 
 # Example app integration tests
 ./gradlew :app1:integrationTest
