@@ -11,6 +11,8 @@ license:
   name: "Apache-2.0"
 contributors:
   sbglasius: "Søren Berg Glasius"
+  jdaugherty: "James Daugherty"
+  matrei: "Mattias Reichel"
 versions:
   current: "1.0.0"
   previous:
