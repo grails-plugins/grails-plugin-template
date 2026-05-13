@@ -1,0 +1,67 @@
+File bintrayProperties = project.rootProject.file('bintray.properties')
+if (bintrayProperties.exists()) {
+  Properties properties = new Properties()
+  properties.load(bintrayProperties.newDataInputStream())
+
+  ext {
+    bintrayUsername = properties.bintrayUsername
+    bintrayApiKey = properties.bintrayApiKey
+  }
+
+  grailsPublish {
+    user = project.bintrayUsername
+    key = project.bintrayApiKey
+
+    githubSlug = "${project.findProperty('githubOrg')}/${project.findProperty('githubProject')}"
+
+    license {
+      name = 'Apache-2.0'
+    }
+
+    title = "Grails Export Plugin"
+    desc = "This plugin offers export functionality supporting different formats e.g. CSV, Excel, Open Document Spreadsheet, PDF and XML and can be extended to add additional formats."
+
+	developers = [  graemerocher: 'Graeme Rocher', 
+					puneetbehl: 'Puneet Behl', 
+					nwwells: 'Nathan Wells', 
+					tulu: 'Ruben', 
+					arturoojeda: 'Arturo Ojeda López',
+					fabiooshiro: 'Fabio Issamu Oshiro',
+					ddelponte: 'Dean Del Ponte',
+					cristallo: 'Cristiano Limiti',
+					mirweb: 'Mirko Weber',
+					joasgarcia: 'Joás Garcia',
+					frangarcia: 'Fran García',
+					dustindclark: 'Dustin Clark' ]
+
+    portalUser = ""
+    portalPassword = ""
+  }
+}
+
+
+File githubProperties = project.rootProject.file('github.properties')
+if (githubProperties.exists()) {
+  Properties properties = new Properties()
+  properties.load(githubProperties.newDataInputStream())
+
+  ext {
+    githubApiKey = properties.githubApiKey
+  }
+
+  githubPages {
+    repoUri = "https://github.com/${project.findProperty('githubOrg')}/${project.findProperty('githubProject')}.git"
+
+    credentials {
+      username = project.hasProperty('githubApiKey') ? project.githubApiKey : ''
+      password = ''
+    }
+
+    pages {
+      from "${buildDir}/docs"
+    }
+  }
+
+  task publishDocs(dependsOn: [docs, publishGhPages]) << {
+  }
+}

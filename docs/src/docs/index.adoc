@@ -1,0 +1,6 @@
+= Plugin Template - Reference Documentation
+Grails Plugins
+
+include::introduction.adoc[]
+
+

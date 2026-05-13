@@ -1,0 +1,6 @@
+[[acknowledgements]]
+=== Acknowledgments
+
+Following are the plugin contributors:
+
+* https://github.com/sbglasius[Søren Berg Glasius]

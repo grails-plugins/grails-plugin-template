@@ -1,0 +1,6 @@
+[[sourceCode]]
+=== Source code
+
+The full source code for this plugin can be found on https://github.com/grails-plugins/grails-plugin-template[GitHub].
+
+For issues, improvements or new features go to the plugin's go to https://github.com/grails-plugins/grails-plugin-template[GitHub issues].

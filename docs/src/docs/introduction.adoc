@@ -1,0 +1,12 @@
+[[introduction]]
+== Introduction
+
+Welcome to the Plugin Template for Grails.
+
+A Grails plugin Template, that can be used either as a starting point for a new grails project, or as base for existing plugins that needs a uniform release process
+
+include::introduction/license.adoc[]
+
+include::introduction/acknowledgements.adoc[]
+
+include::introduction/sourceCode.adoc[]
