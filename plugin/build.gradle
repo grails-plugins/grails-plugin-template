@@ -22,14 +22,3 @@ dependencies {
     
 }
 
-extensions.configure(org.apache.grails.gradle.publish.GrailsPublishExtension) {
-    it.githubSlug = "${githubOrg}/${githubProject}"
-    it.license.name = projectLicense
-    it.title = projectTitle
-    it.desc = projectDescription
-    it.organization {
-        it.name = projectOrg
-        it.url = "https://github.com/${githubOrg}"
-    }
-    it.setDevelopers(projectContributors as Map)
-}
