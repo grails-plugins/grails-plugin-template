@@ -1,3 +1,8 @@
+---
+name: example-apps
+description: Patterns for example applications under examples/ — hosting integration and functional tests, depending on the plugin as a real consumer, and app structure. Use when creating or modifying an example app, or deciding where a test belongs.
+---
+
 # Example Application Best Practices
 
 ## Purpose
@@ -68,20 +73,20 @@ examples/app1/
 │   │   ├── logback-spring.xml
 │   │   └── spring/resources.groovy
 │   ├── controllers/app1/
-│   │   ├── ServerTimingTestController.groovy   # Controllers that exercise the plugin
+│   │   ├── TemplateTestController.groovy   # Controllers that exercise the plugin
 │   │   └── UrlMappings.groovy
 │   ├── init/app1/
 │   │   ├── Application.groovy
 │   │   └── BootStrap.groovy
 │   ├── views/
-│   │   ├── serverTimingTest/          # GSP views for testing view timing
+│   │   ├── TemplateTest/          # GSP views for testing view timing
 │   │   ├── layouts/main.gsp
 │   │   └── ...
 │   ├── assets/                        # Static assets for testing asset timing
 │   └── i18n/                          # Message bundles
 └── src/
     └── integration-test/groovy/app1/
-        └── ServerTimingIntegrationSpec.groovy   # Integration tests
+        └── TemplateIntegrationSpec.groovy   # Integration tests
 ```
 
 ## build.gradle Pattern
@@ -128,7 +133,7 @@ Integration tests run against a live embedded Grails server using the `@Integrat
 
 ```groovy
 @Integration
-class ServerTimingIntegrationSpec extends Specification {
+class TemplateIntegrationSpec extends Specification {
 
     @Shared
     RestTemplate restTemplate = new RestTemplate()
@@ -143,13 +148,13 @@ class ServerTimingIntegrationSpec extends Specification {
 
     void "fast action should include Server Timing header"() {
         when:
-        def response = doGet('/serverTimingTest/fast')
+        def response = doGet('/something/fast')
 
         then:
         response.headers.getFirst('Server-Timing') != null
-        def serverTiming = response.headers.getFirst('Server-Timing')
-        serverTiming.contains('action')
-        serverTiming.contains('view')
+        def something = response.headers.getFirst('Server-Timing')
+        something.contains('action')
+        something.contains('view')
     }
 }
 ```

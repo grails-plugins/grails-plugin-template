@@ -39,7 +39,7 @@ export/
 ├── examples/app1/       # Example app with integration tests
 ├── build-logic/         # Gradle convention plugins (shared build configuration)
 ├── docs/                # Asciidoctor documentation
-└── .skills/             # AI agent best-practice docs
+└── .agents/skills/      # AI agent skills (.claude is a symlink to .agents)
 ```
 
 Key architectural rules:

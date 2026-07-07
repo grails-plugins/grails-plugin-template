@@ -1,3 +1,8 @@
+---
+name: gradle-best-practices
+description: Gradle conventions for template-based Grails plugin repositories — convention plugins in build-logic/, lazy configuration APIs, extension configuration, and build structure rules. Use when writing or modifying any build.gradle file or convention plugin.
+---
+
 # Gradle Best Practices
 
 ## Purpose

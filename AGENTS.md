@@ -13,14 +13,15 @@ grails project, or as base for existing plugins that needs a uniform release pro
 
 ## Skill Files (Best Practices)
 
-Detailed best practices are documented in `.skills/`:
+Detailed best practices are documented as skills in `.agents/skills/` (`.claude` is a symlink to `.agents`):
 
-| Skill File                                                             | Purpose                                               |
-|------------------------------------------------------------------------|-------------------------------------------------------|
-| [`.skills/repository-structure.md`](.skills/repository-structure.md)   | Canonical directory layout and architectural rules    |
-| [`.skills/gradle-best-practices.md`](.skills/gradle-best-practices.md) | Gradle best practices, convention plugins, and idioms |
-| [`.skills/plugin-project.md`](.skills/plugin-project.md)               | Plugin project scope: source code + unit tests only   |
-| [`.skills/example-apps.md`](.skills/example-apps.md)                   | Example app patterns: integration & functional tests  |
+| Skill                                                                                   | Purpose                                                    |
+|------------------------------------------------------------------------------------------|------------------------------------------------------------|
+| [`repository-structure`](.agents/skills/repository-structure/SKILL.md)                    | Canonical directory layout and architectural rules         |
+| [`gradle-best-practices`](.agents/skills/gradle-best-practices/SKILL.md)                  | Gradle best practices, convention plugins, and idioms      |
+| [`plugin-project`](.agents/skills/plugin-project/SKILL.md)                                | Plugin project scope: source code + unit tests only        |
+| [`example-apps`](.agents/skills/example-apps/SKILL.md)                                    | Example app patterns: integration & functional tests       |
+| [`enhance-plugin-with-template`](.agents/skills/enhance-plugin-with-template/SKILL.md)    | Migrate an existing plugin onto this template structure    |
 
 **Read these skill files before making structural changes to the repository.**
 
@@ -41,7 +42,7 @@ Detailed best practices are documented in `.skills/`:
 
 ```
 grails-plugin-template/
-├── .skills/             # Best practice skill files
+├── .agents/skills/      # Agent skill files (.claude is a symlink to .agents)
 ├── plugin/              # Core Grails plugin (artifact: grails-plugin-template)
 │   ├── grails-app/      #   Plugin services, domain, controller, taglibs and conf
 │   └── src/main/        #   Plugin source code 
@@ -100,7 +101,7 @@ Run `sdk env install` to set up the environment.
 
 The plugin provides a grails-plugin-template mechanism:
 
-1. **`PluginTemplateGrailsPlugin`** registers the plugin 
+1. **`PluginTemplateGrailsPlugin`** registers the plugin
 
 ### Core Classes
 
@@ -116,7 +117,7 @@ There is no testset in the plugin template project.
 
 ### Unit Tests (`plugin/src/test/`)
 
-Unit tests use the **Spock Framework** and run on JUnit Platform. 
+Unit tests use the **Spock Framework** and run on JUnit Platform.
 
 ### Integration / Functional Tests (`examples/app1/`)
 

@@ -124,8 +124,15 @@ jobs:
           # Directories
           mkdir -p target/.github/dependency-graph/
           rsync -a source/.github/dependency-graph/ target/.github/dependency-graph/
-          mkdir -p target/.skills/
-          rsync -a --delete source/.skills/ target/.skills/
+          mkdir -p target/.agents/
+          rsync -a --delete --exclude='skills/enhance-plugin-with-template/' \
+            source/.agents/ target/.agents/
+          # legacy location, replaced by .agents/skills/
+          rm -rf target/.skills
+          # .claude is a symlink to .agents for Claude Code discovery
+          if [ ! -e target/.claude ] && [ ! -L target/.claude ]; then
+            ln -s .agents target/.claude
+          fi
           mkdir -p target/build-logic/
           rsync -a source/build-logic/ target/build-logic/
           mkdir -p target/gradle/
@@ -159,7 +166,7 @@ jobs:
             - `.github/workflows/` (CI, release, release-notes, update-contributors, update-versions)
             - `.github/scripts/` (update-contributors, update-versions)
             - `.github/dependabot.yml`, `renovate.json`, `release-drafter.yml`
-            - `.skills/`
+            - `.agents/` (agent skills; `.claude` symlink created if absent, replaces legacy `.skills/`)
             - `build-logic/`
             - `gradle/` (wrapper)
             - `.editorconfig`, `.sdkmanrc`, `CONTRIBUTING.md`, `gradlew`, `gradlew.bat`, `LICENSE.txt`

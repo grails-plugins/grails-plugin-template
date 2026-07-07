@@ -1,3 +1,8 @@
+---
+name: repository-structure
+description: Canonical directory layout and architectural rules for Grails plugin repositories built on grails-plugin-template. Use before making structural changes — adding subprojects, moving code between plugin/examples/docs, or changing the build layout.
+---
+
 # Grails Plugin Repository Structure
 
 ## Purpose
@@ -86,7 +91,7 @@ export/
 ├── gradle.properties           # Shared version properties
 ├── .sdkmanrc                   # SDK versions (Java, Gradle, Groovy)
 ├── AGENTS.md                   # AI agent instructions
-├── .skills/                    # Best practice skill files
+├── .agents/skills/             # Agent skill files (.claude is a symlink to .agents)
 ├── LICENSE                     # Apache 2.0
 └── README.md
 ```

@@ -30,4 +30,30 @@ dependencies {
 }
 ```
 
+## Adapting the Template — What to Change
+
+When creating a new plugin from this template, or migrating an existing plugin onto it, the
+following files carry plugin-specific values and must be updated:
+
+| File                                                           | What to change                                                                                                                                                       |
+|----------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `settings.gradle`                                              | `rootProject.name` plus the `plugin` and `docs` project names (the plugin project name is the published artifact ID)                                                 |
+| `gradle.properties`                                            | `projectVersion`, `grailsVersion`, and `projectsToPublish` (must match the plugin project name from `settings.gradle`)                                               |
+| `project.yml`                                                  | All metadata: name, title, description, org, GitHub coordinates, licence, contributors, and versions — this file drives publishing metadata, docs, and release notes |
+| `plugin/build.gradle`                                          | `group`, your plugin's dependencies, and which convention plugins to apply                                                                                           |
+| `plugin/src/main/groovy/.../PluginTemplateGrailsPlugin.groovy` | Replace with your own `*GrailsPlugin.groovy` descriptor                                                                                                              |
+| `examples/app1/`                                               | Rename and adapt into an example app that exercises your plugin (hosts the integration/functional tests)                                                             |
+| `docs/src/docs/*.adoc`                                         | Write your plugin's documentation (leave `index.tmpl` untouched — it is filled in by the version-index workflow)                                                     |
+| `README.md`                                                    | Rewrite for your plugin: badges, a short description, an installation snippet, and a link to the published documentation                                             |
+| `AGENTS.md`                                                    | Update the project overview, artifact names, example-app paths, and version                                                                                          |
+
+Do **not** edit `build-logic/`, `gradle/`, `.github/workflows/`, `.github/scripts/`, `.agents/`,
+`CONTRIBUTING.md`, or `LICENSE.txt` in your plugin repository — these are managed by this template
+and kept up to date via the automated file sync. Finally, register your plugin in
+`.github/projects.yml` **in this repository** so it receives future template updates.
+
+Step-by-step instructions live in [TEMPLATE_README.md](TEMPLATE_README.md). For an LLM-assisted
+migration of an existing plugin, point your agent at the
+[enhance-plugin-with-template skill](.agents/skills/enhance-plugin-with-template/SKILL.md).
+
 [Documentation]: https://grails-plugins.github.io/grails-plugin-template/

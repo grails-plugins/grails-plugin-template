@@ -1,3 +1,8 @@
+---
+name: plugin-project
+description: Scope rules for the plugin/ subproject — plugin source code and unit tests only. Use when adding code or tests to the plugin module, or deciding whether something belongs in the plugin or in an example app.
+---
+
 # Plugin Project Best Practices
 
 ## Purpose
