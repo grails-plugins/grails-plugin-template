@@ -2,7 +2,7 @@ plugins {
     id 'config.code-coverage'
     id 'config.code-style'
     id 'config.compile'
-    id 'config.grails-plugin'
+    id 'config.grails-web-plugin'
     id 'config.project-metadata'
     id 'config.publish'
     id 'config.testing'

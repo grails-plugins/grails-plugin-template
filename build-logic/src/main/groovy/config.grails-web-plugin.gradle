@@ -4,11 +4,13 @@
 import asset.pipeline.gradle.AssetPipelineExtension
 import org.grails.gradle.plugin.core.GrailsExtension
 
+// Used for plugins that has the use for asset-pipeline
+
 plugins {
-    id 'org.apache.grails.gradle.grails-plugin'
+    id 'config.grails-plugin'
+    id 'cloud.wondrify.asset-pipeline'
 }
 
-extensions.configure(GrailsExtension) {
-    // Plugins should avoid the spring dependency management plugin due to how it prefers certain libraries
-    it.springDependencyManagement = false
+extensions.configure(AssetPipelineExtension) {
+    it.packagePlugin = true
 }
