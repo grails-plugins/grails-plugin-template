@@ -298,3 +298,18 @@ Every one of these happened during the grails-jasypt migration:
    as a confusing signing or auth failure on the first real release. Check
    **Settings → Secrets and variables → Actions** on the plugin repo itself and delete any
    publishing-related secrets that duplicate an org secret before cutting the first release.
+8. **Duplicate Sonatype staging repos after a re-run** — `release.yml` identifies the staging
+   repository to close/release by a description built from `github.run_id`. Re-running failed jobs
+   on the same workflow run keeps `run_id` unchanged, so if an earlier attempt got far enough to
+   create a staging repo before failing, the retry creates a *second* repo with an identical
+   description. `findSonatypeStagingRepository` then errors with "Too many repositories found" and
+   refuses to pick one. Fixed by appending `github.run_attempt` (which does increment on a re-run)
+   to `NEXUS_PUBLISH_DESCRIPTION` in both the `publish` and `release` jobs, so each attempt gets a
+   distinguishable description. If you hit this before the fix is in place, note that Sonatype's
+   Central Portal "Deployments" UI and the legacy `ossrh-staging-api.central.sonatype.com` staging
+   API are different backends — dropping a deployment in the portal UI does not remove the
+   corresponding entry from the legacy staging API that `gradle-nexus-publish-plugin` reads. You
+   must drop stale repos via that legacy API directly (`POST .../service/local/staging/bulk/drop`
+   with a `stagedRepositoryIds` array), and that API also seems to require an explicit
+   `Content-Type: application/json` header on every request, including GETs, or it responds with a
+   generic 400 "No content-type header provided".
