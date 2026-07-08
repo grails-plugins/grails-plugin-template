@@ -268,6 +268,9 @@ projects:
    version index push to it.
 6. Open a PR and **watch the full CI run**, including the `publish` and `update-index` jobs — most
    migration mistakes only surface there (see Pitfalls).
+7. If the repo pre-dates its move into `gpc`/`grails-plugins`, check its repository-level Actions
+   secrets and remove any that duplicate an org secret (signing, Nexus/Sonatype credentials) before
+   the first release — see Pitfall 7.
 
 ## Pitfalls
 
@@ -286,3 +289,12 @@ Every one of these happened during the grails-jasypt migration:
    `settings.gradle`, or nothing gets published without an error you'd notice.
 6. **`project.yml` versions block** — seed `versions.current`/`previous` from real git tags;
    `ignore` should list non-release gh-pages directories (`snapshot`, stale `x.y.x` folders).
+7. **Stale repository-level secrets shadow org secrets** — a plugin repo that pre-dates its move
+   into `gpc`/`grails-plugins` may still have its own repository secrets (`SIGNING_KEY`,
+   `SIGNING_PASSPHRASE`, `SECRING_FILE`, `NEXUS_PUBLISH_USERNAME`/`PASSWORD`, etc.) from its old,
+   independent publishing setup. Repository-level secrets always take precedence over
+   organization-level secrets of the same name, so the release workflow silently signs/publishes
+   with the wrong (often stale or revoked) credentials instead of the org's shared ones — surfacing
+   as a confusing signing or auth failure on the first real release. Check
+   **Settings → Secrets and variables → Actions** on the plugin repo itself and delete any
+   publishing-related secrets that duplicate an org secret before cutting the first release.
