@@ -183,6 +183,5 @@
         </div>
     </div>
 </main>
-<asset:javascript src="welcome.js"/>
 </body>
 </html>

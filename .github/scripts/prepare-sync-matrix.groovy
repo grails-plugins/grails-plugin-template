@@ -7,10 +7,15 @@ def projectsYml = new YamlSlurper().parse(new File('.github/projects.yml')) as M
 def filterProject = System.getenv('FILTER_PROJECT') ?: ''
 
 def repos = []
-(projectsYml.projects as Map<String, List<String>>).each { org, repoList ->
-    repoList.each { repo ->
+(projectsYml.projects as Map<String, List>).each { org, repoList ->
+    repoList.each { entry ->
+        // entry is either a plain repo name, or a map with repo:/branch: to
+        // pin the sync PR to a specific branch instead of the GitHub-reported
+        // default branch.
+        def repo = entry instanceof Map ? entry.repo : entry
+        def branch = entry instanceof Map ? (entry.branch ?: '') : ''
         if (!filterProject || filterProject == "${org}/${repo}") {
-            repos << [org: org, repo: repo]
+            repos << [org: org, repo: repo, branch: branch]
         }
     }
 }

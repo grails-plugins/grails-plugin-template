@@ -32,12 +32,13 @@ Once a plugin is in the template format it gets:
    project(':docs').name = 'grails-my-plugin-docs'
    ```
 
-3. **Update `gradle.properties`** — see the [reference below](#gradleproperties).
+3. **Update `gradle.properties`** — see the [reference below](#gradleproperties). This includes
+   `projectGroup`, your Maven publication group (e.g. `io.github.gpc`) — it applies to the root
+   project and every published subproject, so it only needs setting once.
 
 4. **Update `project.yml`** — see the [reference below](#projectyml).
 
 5. **Update `plugin/build.gradle`**:
-    - Set `group` to match your Maven publication group (e.g. `io.github.gpc`).
     - Adjust `dependencies` for your plugin's requirements.
 
 6. **Replace the plugin descriptor** at
@@ -138,14 +139,14 @@ plugins {
     id 'config.code-coverage'
     id 'config.code-style'
     id 'config.compile'
-    id 'config.grails-plugin'
+    id 'config.grails-plugin'      // or 'config.grails-web-plugin' if the plugin ships web assets
     id 'config.project-metadata'
     id 'config.publish'
     id 'config.testing'
 }
 
 version = projectVersion
-group = "io.github.gpc"   // your Maven group
+group = projectGroup   // from gradle.properties
 
 dependencies {
     profile 'org.apache.grails.profiles:web-plugin'
@@ -156,6 +157,11 @@ dependencies {
     testImplementation 'org.apache.grails:grails-dependencies-test'
 }
 ```
+
+`config.grails-plugin` applies the Grails plugin Gradle plugin only. `config.grails-web-plugin`
+composes it with asset-pipeline packaging (`packagePlugin = true`) for plugins that ship
+CSS/JS/images under `grails-app/assets/` — this template's own `plugin/build.gradle` uses
+`config.grails-web-plugin` for that reason.
 
 Publishing metadata (title, description, licence, developers, GitHub slug) is configured
 automatically by `config.publish` from the values in `project.yml` — do not add a manual
@@ -209,8 +215,12 @@ by hand after the initial setup.
 | Property                     | Description                                                                                                     |
 |------------------------------|-----------------------------------------------------------------------------------------------------------------|
 | `projectVersion`             | Current version, e.g. `1.0.0-SNAPSHOT`. Use `-SNAPSHOT` suffix on development branches.                         |
-| `grailsVersion`              | Grails BOM version to compile and test against, e.g. `7.0.11`.                                                  |
+| `projectGroup`               | Maven group for the root project and all published subprojects, e.g. `io.github.gpc`.                          |
+| `grailsVersion`              | Grails BOM version to compile and test against, e.g. `7.0.11`.                                                 |
 | `projectsToPublish`          | Comma-separated list of subproject names to include in Maven publishing. Usually just the plugin artifact name. |
+| `checkstyleVersion`          | Checkstyle version used by `config.code-style`.                                                                 |
+| `codenarcVersion`            | CodeNarc version used by `config.code-style`.                                                                  |
+| `jacocoVersion`              | JaCoCo version used by `config.code-coverage` / `config.code-coverage-aggregate`.                               |
 | `asciidoctorVersion`         | Version of the Asciidoctor Gradle plugin used by the `docs` subproject.                                         |
 | `testLoggerVersion`          | Version of the Gradle test-logger plugin.                                                                       |
 | `ciBuildScanPublish`         | Set to `true` to publish Gradle build scans from CI.                                                            |
@@ -218,14 +228,18 @@ by hand after the initial setup.
 | `ciBuildScanTermsOfUseAgree` | Set to `yes` to agree to build scan terms.                                                                      |
 
 The `org.gradle.*` properties at the bottom control daemon, caching, and JVM settings — leave them unchanged unless you
-have a specific reason.
+have a specific reason. The Java version comes from `.sdkmanrc`, not from `gradle.properties`.
 
 **Minimal example for a new plugin:**
 
 ```properties
 projectVersion=1.0.0-SNAPSHOT
+projectGroup=io.github.gpc
 grailsVersion=7.0.11
 projectsToPublish=grails-my-plugin
+checkstyleVersion=10.21.4
+codenarcVersion=3.6.0
+jacocoVersion=0.8.12
 asciidoctorVersion=4.0.5
 testLoggerVersion=4.0.0
 ciBuildScanPublish=true

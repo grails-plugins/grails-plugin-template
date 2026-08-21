@@ -105,13 +105,16 @@ auto-discovery, dependencyResolutionManagement) exactly as in the template.
 
 ```properties
 projectVersion=X.Y.Z-SNAPSHOT       # next version of THIS plugin
+projectGroup=io.github.gpc          # your Maven group — read by config.publish-root,
+                                     # plugin/build.gradle and docs/build.gradle
 grailsVersion=7.0.12                # or current 7.x release
-javaVersion=17
 projectsToPublish=grails-my-plugin  # MUST match plugin project name in settings.gradle
-assetPipelineDisabled=true          # unless the plugin ships assets
 # keep tool versions (checkstyle/codenarc/jacoco/asciidoctor/testLogger),
 # build-scan settings, and org.gradle.* properties from the template
 ```
+
+The Java version comes from `.sdkmanrc` (via `config.compile`), not from `gradle.properties` — just
+copy `.sdkmanrc` from the template and set the versions there.
 
 **Root `build.gradle`** — minimal; composition only:
 
@@ -170,14 +173,14 @@ plugins {
     id 'config.code-coverage'
     id 'config.code-style'
     id 'config.compile'
-    id 'config.grails-plugin'
+    id 'config.grails-plugin'      // or 'config.grails-web-plugin' — see below
     id 'config.project-metadata'
     id 'config.publish'
     id 'config.testing'
 }
 
 version = projectVersion
-group = "io.github.gpc"        // your Maven group
+group = projectGroup           // from gradle.properties, not hardcoded here
 
 dependencies {
     profile 'org.apache.grails.profiles:web-plugin'
@@ -193,6 +196,11 @@ dependencies {
     testImplementation 'org.apache.grails:grails-dependencies-test'
 }
 ```
+
+Use `config.grails-plugin` if the plugin ships no web assets of its own. Use
+`config.grails-web-plugin` instead (composes `config.grails-plugin` with asset-pipeline packaging,
+`packagePlugin = true`) if it ships CSS/JS/images under `grails-app/assets/` — this template's own
+`plugin/build.gradle` uses `config.grails-web-plugin` for exactly that reason.
 
 Framework/GORM dependencies the consuming app provides should be `compileOnly`; libraries the
 plugin bundles stay `implementation`.
@@ -214,8 +222,9 @@ dependencies {
 }
 ```
 
-**Docs module** — `docs/build.gradle` from the template works as-is apart from `group`. Write the
-content under `docs/src/docs/`:
+**Docs module** — copy `docs/build.gradle` from the template unmodified; it derives the plugin's
+Maven group from `projectGroup` and its project path from its own name (`<x>-docs` → `:x`), so
+nothing in it needs editing. Write the content under `docs/src/docs/`:
 
 - `index.adoc` — title + author, then `include::` the section files
 - `introduction.adoc` + `introduction/` (license, source code, acknowledgements)
