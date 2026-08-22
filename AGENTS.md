@@ -97,6 +97,14 @@ Use SDKMAN to install the correct tool versions (see `.sdkmanrc`):
 
 Run `sdk env install` to set up the environment.
 
+### If this is a Grails 8 upgrade, use 
+
+- Java: `21.0.12-librca`
+- Gradle: `9.7.0`
+- Groovy: `5.0.8`
+
+Adding a `.lock` file to the relevant places
+
 ## Architecture
 
 The plugin provides a grails-plugin-template mechanism:

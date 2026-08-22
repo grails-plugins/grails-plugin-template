@@ -205,6 +205,8 @@ Use `config.grails-plugin` if the plugin ships no web assets of its own. Use
 Framework/GORM dependencies the consuming app provides should be `compileOnly`; libraries the
 plugin bundles stay `implementation`.
 
+Remember to update the Grails version in the plugin descriptor (`grailsVersion = "the version being upgraded to"`) 
+
 ## Phase 6 — Example app and docs
 
 **`examples/<name>/build.gradle`** — apply `config.example-app`, depend on the plugin by project
