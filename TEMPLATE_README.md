@@ -1,0 +1,297 @@
+# Using the Grails Plugin Template
+
+This document explains how to use `grails-plugin-template` either as a starting point for a **new** Grails plugin or as
+a **migration target** for an existing plugin that needs a uniform build and release process.
+
+---
+
+## What the Template Provides
+
+Once a plugin is in the template format it gets:
+
+- A consistent multi-project Gradle build (`plugin/`, `examples/`, `docs/`)
+- Convention plugins in `build-logic/` that handle compilation, testing, publishing, docs, and asset pipeline
+- GitHub Actions for CI, snapshot publishing, multi-stage releases to Maven Central, release notes, contributor
+  tracking, and version index updates
+- Automated file sync: when a new template release is published, a PR is opened in every registered plugin repo to keep
+  all infrastructure files up to date
+
+---
+
+## Starting a New Plugin
+
+1. **Use this repo as a template** — click *Use this template* on GitHub, or clone and remove the `.git` directory.
+
+2. **Rename the plugin subproject** in `settings.gradle`:
+   ```groovy
+   rootProject.name = 'my-plugin-root'
+
+   include('plugin')
+   project(':plugin').name = 'grails-my-plugin'   // artifact ID
+   include('docs')
+   project(':docs').name = 'grails-my-plugin-docs'
+   ```
+
+3. **Update `gradle.properties`** — see the [reference below](#gradleproperties). This includes
+   `projectGroup`, your Maven publication group (e.g. `io.github.gpc`) — it applies to the root
+   project and every published subproject, so it only needs setting once.
+
+4. **Update `project.yml`** — see the [reference below](#projectyml).
+
+5. **Update `plugin/build.gradle`**:
+    - Adjust `dependencies` for your plugin's requirements.
+
+6. **Replace the plugin descriptor** at
+   `plugin/src/main/groovy/grails/plugins/template/PluginTemplateGrailsPlugin.groovy` with your own
+   `*GrailsPlugin.groovy`.
+
+7. **Register the plugin** in `.github/projects.yml` so it receives future template syncs —
+   see [Registering for Sync](#registering-for-sync).
+
+8. **Install SDK versions**: run `sdk env install` (requires [SDKMAN](https://sdkman.io)) to get the correct Java,
+   Gradle, and Groovy versions from `.sdkmanrc`.
+
+---
+
+## Migrating an Existing Plugin
+
+The goal is to replace the plugin's ad-hoc build scripts and workflows with the template structure while keeping all
+plugin source code in place.
+
+> **Tip:** for an LLM-assisted migration, point your agent (e.g. Claude Code) at
+> [.agents/skills/enhance-plugin-with-template/SKILL.md](.agents/skills/enhance-plugin-with-template/SKILL.md) —
+> a step-by-step playbook distilled from a real migration, including the pitfalls found along the way.
+
+### Step 1 — Copy infrastructure files
+
+Copy these files and directories wholesale from the template into your plugin repo. Do **not** edit them in your own
+repo; they are managed by the template sync:
+
+```
+.github/workflows/
+.github/scripts/
+.github/dependabot.yml
+.github/renovate.json
+.github/release-drafter.yml
+.github/dependency-graph/
+.agents/                    # agent skills (symlink .claude -> .agents for Claude Code)
+build-logic/
+gradle/
+.editorconfig
+.sdkmanrc
+CONTRIBUTING.md
+gradlew
+gradlew.bat
+LICENSE.txt
+```
+
+### Step 2 — Adopt the multi-project layout
+
+The template expects this structure:
+
+```
+my-plugin/
+├── plugin/          # Plugin source code and unit tests
+│   ├── grails-app/
+│   └── src/
+├── examples/
+│   └── app1/        # Integration / functional tests
+├── docs/            # Asciidoctor documentation
+├── build-logic/     # (copied from template — do not edit)
+├── gradle/          # (copied from template — do not edit)
+├── build.gradle
+├── settings.gradle
+├── gradle.properties
+└── project.yml
+```
+
+Move your plugin source into `plugin/` if it isn't already there.
+
+### Step 3 — Update `settings.gradle`
+
+Replace your existing `settings.gradle` with the template version and change the project names:
+
+```groovy
+rootProject.name = 'grails-my-plugin-root'
+
+include('plugin')
+project(':plugin').name = 'grails-my-plugin'
+include('docs')
+project(':docs').name = 'grails-my-plugin-docs'
+```
+
+The `examples/` directory is auto-discovered — add a `build.gradle` there for each example app.
+
+### Step 4 — Update `gradle.properties`
+
+See the [reference below](#gradleproperties).
+
+### Step 5 — Create `project.yml`
+
+See the [reference below](#projectyml). Copy the template's `project.yml` and fill in your plugin's details.
+
+### Step 6 — Update `plugin/build.gradle`
+
+Apply the convention plugins and set your group and dependencies:
+
+```groovy
+plugins {
+    id 'config.code-coverage'
+    id 'config.code-style'
+    id 'config.compile'
+    id 'config.grails-plugin'      // or 'config.grails-web-plugin' if the plugin ships web assets
+    id 'config.project-metadata'
+    id 'config.publish'
+    id 'config.testing'
+}
+
+version = projectVersion
+group = projectGroup   // from gradle.properties
+
+dependencies {
+    profile 'org.apache.grails.profiles:web-plugin'
+    compileOnly platform("org.apache.grails:grails-bom:$grailsVersion")
+    compileOnly 'org.apache.grails:grails-dependencies-starter-web'
+    testImplementation platform("org.apache.grails:grails-bom:$grailsVersion")
+    testImplementation 'org.apache.grails:grails-dependencies-starter-web'
+    testImplementation 'org.apache.grails:grails-dependencies-test'
+}
+```
+
+`config.grails-plugin` applies the Grails plugin Gradle plugin only. `config.grails-web-plugin`
+composes it with asset-pipeline packaging (`packagePlugin = true`) for plugins that ship
+CSS/JS/images under `grails-app/assets/` — this template's own `plugin/build.gradle` uses
+`config.grails-web-plugin` for that reason.
+
+Publishing metadata (title, description, licence, developers, GitHub slug) is configured
+automatically by `config.publish` from the values in `project.yml` — do not add a manual
+`GrailsPublishExtension` block.
+
+### Step 7 — Register for sync
+
+Add the plugin to `.github/projects.yml` in **this template repo** — see [Registering for Sync](#registering-for-sync).
+
+---
+
+## `project.yml`
+
+This file is the single source of metadata for the plugin. It drives documentation generation, Maven publishing
+metadata, release notes, and the contributor list.
+
+```yaml
+---
+project:
+    name: "grails-my-plugin"           # artifact ID, matches settings.gradle
+    title: "Grails My Plugin"          # human-readable display name
+    description: "One-line description of what the plugin does"
+    org: "Grails Plugins"              # organisation display name (for Maven POM)
+
+github:
+    org: "gpc"                         # GitHub org slug (gpc or grails-plugins)
+    project: "grails-my-plugin"        # GitHub repo name
+
+license:
+    name: "Apache-2.0"                 # SPDX licence identifier
+
+contributors: # updated automatically by update-contributors workflow
+    githubLogin: "Display Name"
+
+versions:
+    current: "1.0.0"                   # updated automatically on each release
+    previous:
+        - "1.0.0"
+    ignore: # version strings to exclude from the docs index
+        - "1.0.x"
+        - "snapshot"
+```
+
+The `contributors` and `versions` blocks are maintained automatically by GitHub Actions — you do not need to edit them
+by hand after the initial setup.
+
+---
+
+## `gradle.properties`
+
+| Property                     | Description                                                                                                     |
+|------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `projectVersion`             | Current version, e.g. `1.0.0-SNAPSHOT`. Use `-SNAPSHOT` suffix on development branches.                         |
+| `projectGroup`               | Maven group for the root project and all published subprojects, e.g. `io.github.gpc`.                          |
+| `grailsVersion`              | Grails BOM version to compile and test against, e.g. `7.0.11`.                                                 |
+| `projectsToPublish`          | Comma-separated list of subproject names to include in Maven publishing. Usually just the plugin artifact name. |
+| `checkstyleVersion`          | Checkstyle version used by `config.code-style`.                                                                 |
+| `codenarcVersion`            | CodeNarc version used by `config.code-style`.                                                                  |
+| `jacocoVersion`              | JaCoCo version used by `config.code-coverage` / `config.code-coverage-aggregate`.                               |
+| `asciidoctorVersion`         | Version of the Asciidoctor Gradle plugin used by the `docs` subproject.                                         |
+| `testLoggerVersion`          | Version of the Gradle test-logger plugin.                                                                       |
+| `ciBuildScanPublish`         | Set to `true` to publish Gradle build scans from CI.                                                            |
+| `ciBuildScanTermsOfUseUrl`   | Build scan terms URL — leave as-is.                                                                             |
+| `ciBuildScanTermsOfUseAgree` | Set to `yes` to agree to build scan terms.                                                                      |
+
+The `org.gradle.*` properties at the bottom control daemon, caching, and JVM settings — leave them unchanged unless you
+have a specific reason. The Java version comes from `.sdkmanrc`, not from `gradle.properties`.
+
+**Minimal example for a new plugin:**
+
+```properties
+projectVersion=1.0.0-SNAPSHOT
+projectGroup=io.github.gpc
+grailsVersion=7.0.11
+projectsToPublish=grails-my-plugin
+checkstyleVersion=10.21.4
+codenarcVersion=3.6.0
+jacocoVersion=0.8.12
+asciidoctorVersion=4.0.5
+testLoggerVersion=4.0.0
+ciBuildScanPublish=true
+ciBuildScanTermsOfUseUrl=https://gradle.com/terms-of-service
+ciBuildScanTermsOfUseAgree=yes
+org.gradle.caching=true
+org.gradle.daemon=true
+org.gradle.parallel=true
+org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1024M
+```
+
+---
+
+## Registering for Sync
+
+To receive automated infrastructure updates, add your plugin to `.github/projects.yml` in **this template repo** (
+`grails-plugin-template`):
+
+```yaml
+projects:
+    gpc:
+        - my-plugin          # → github.com/gpc/grails-my-plugin
+    grails-plugins:
+        - another-plugin     # → github.com/grails-plugins/grails-another-plugin
+```
+
+Once registered, every new release of `grails-plugin-template` will open a PR in your plugin repo updating the
+infrastructure files. The PR is opened on a branch named `sync-files-from-template` and will auto-merge if CI passes.
+
+### Locking a file
+
+If you need to diverge from the template for a specific file, create a `.lock` file next to it:
+
+```
+touch .github/workflows/ci.yml.lock
+```
+
+The sync will skip any file that has a corresponding `.lock` file alongside it. Remove the lock file when you want to
+accept template updates again.
+
+---
+
+## SDK Versions
+
+Tool versions are pinned in `.sdkmanrc`. Install [SDKMAN](https://sdkman.io) and run:
+
+```bash
+sdk env install
+```
+
+| Tool   | Version                         |
+|--------|---------------------------------|
+| Java   | `17.0.18-librca` (Liberica JDK) |
+| Gradle | `8.14.4`                        |
+| Groovy | `4.0.30`                        |

@@ -1,0 +1,3 @@
+This directory is intentionally empty in the template. It exists so the
+asset-pipeline plugin (config.grails-web-plugin) has a valid grails-app/assets
+input directory. Add your plugin's real stylesheets/images/javascripts here.

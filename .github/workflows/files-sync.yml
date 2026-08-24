@@ -1,0 +1,264 @@
+name: "Files Sync"
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Specific project to sync (org/repo, e.g. gpc/export). Leave empty to sync all.'
+        required: false
+        type: string
+
+env:
+  JAVA_DISTRIBUTION: 'liberica'
+
+jobs:
+  prepare-matrix:
+    if: github.repository == 'grails-plugins/grails-plugin-template'
+    runs-on: ubuntu-24.04
+    outputs:
+      repos: ${{ steps.prepare.outputs.repos }}
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v6
+
+      - name: "Export .sdkmanrc properties"
+        uses: apache/grails-github-actions/export-gradle-properties@asf
+        with:
+          file: ".sdkmanrc"
+          prefix: "SDKMANRC_"
+
+      - name: "Determine Java Version"
+        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
+
+      - name: "☕️ Setup JDK"
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.SDKMANRC_java }}
+
+      - name: "🦊 Install Groovy ${{ env.SDKMANRC_groovy }}"
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install groovy ${{ env.SDKMANRC_groovy }} < /dev/null
+          echo "$HOME/.sdkman/candidates/groovy/current/bin" >> $GITHUB_PATH
+
+      - name: "🗂️ Prepare sync matrix"
+        id: prepare
+        env:
+          FILTER_PROJECT: ${{ inputs.project }}
+        run: groovy .github/scripts/prepare-sync-matrix.groovy
+
+  sync-files:
+    needs: prepare-matrix
+    if: github.repository == 'grails-plugins/grails-plugin-template'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        include: ${{ fromJson(needs.prepare-matrix.outputs.repos) }}
+    steps:
+      - name: "🔑 Mint org-scoped app token for ${{ matrix.org }}"
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ matrix.org }}
+
+      - name: "📥 Checkout source (template)"
+        uses: actions/checkout@v6
+        with:
+          path: source
+
+      - name: "📥 Checkout target (${{ matrix.org }}/${{ matrix.repo }})"
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ matrix.org }}/${{ matrix.repo }}
+          path: target
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: "🌿 Detect target branch"
+        id: branch
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # A pinned branch in .github/projects.yml (matrix.branch) wins over
+          # the repo's GitHub-reported default branch — for repos still
+          # developing on a maintenance line.
+          if [ -n "${{ matrix.branch }}" ]; then
+            echo "branch=${{ matrix.branch }}" >> $GITHUB_OUTPUT
+          else
+            branch=$(gh api repos/${{ matrix.org }}/${{ matrix.repo }} --jq '.default_branch')
+            echo "branch=${branch}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: "🔄 Sync files from template"
+        run: |
+          set -euo pipefail
+
+          maybe_copy() {
+            local src="$1" dst="$2"
+            if [ -f "target/${dst}.lock" ]; then
+              echo "Skipping locked: ${dst}"
+              return
+            fi
+            mkdir -p "target/$(dirname "${dst}")"
+            cp "source/${src}" "target/${dst}"
+          }
+
+          # A target repo can pin any rsync'd file to its current content by
+          # dropping a same-named <file>.lock next to it (this already works
+          # for maybe_copy files below). This extends the same convention to
+          # whole synced trees: any *.lock found under target/$1 excludes its
+          # namesake from that tree's rsync, so e.g. a lock at
+          # target/.github/workflows/ci.yml.lock keeps a repo's own ci.yml.
+          lock_excludes() {   # $1 = path under target/, e.g. .github/workflows
+            local dir="target/$1"
+            [ -d "$dir" ] || return 0
+            find "$dir" -name '*.lock' -printf '%P\n' 2>/dev/null \
+              | sed -e 's/\.lock$//' -e 's|^|--exclude=|'
+          }
+
+          # Workflow files come from two places in the template:
+          #  - .github/workflows/       — everything the template itself also runs
+          #  - .github/sync/workflows/  — workflows that are child-only and must
+          #                               never execute in the template repo (e.g.
+          #                               release.yml)
+          # Both need to land in target/.github/workflows/, and --delete must see
+          # them together — otherwise syncing them one after another would have
+          # the second rsync's --delete wipe out what the first one just added.
+          # So stage them into one directory first, then rsync --delete once.
+          workflow_stage=$(mktemp -d)
+          rsync -a --exclude='files-sync.yml' source/.github/workflows/ "${workflow_stage}/"
+          if [ -d source/.github/sync/workflows ]; then
+            rsync -a source/.github/sync/workflows/ "${workflow_stage}/"
+          fi
+          mkdir -p target/.github/workflows/
+          mapfile -t workflow_locks < <(lock_excludes .github/workflows)
+          # --exclude='local-*.yml' is a standing escape hatch for workflows that
+          # are genuinely repo-specific and were never meant to come from the
+          # template (name them local-<anything>.yml to keep them across syncs).
+          rsync -a --delete --exclude='local-*.yml' "${workflow_locks[@]}" \
+            "${workflow_stage}/" target/.github/workflows/
+          rm -rf "${workflow_stage}"
+
+          # Scripts — exclude prepare-sync-matrix.groovy (template-only)
+          mkdir -p target/.github/scripts/
+          mapfile -t scripts_locks < <(lock_excludes .github/scripts)
+          rsync -a --exclude='prepare-sync-matrix.groovy' "${scripts_locks[@]}" \
+            source/.github/scripts/ target/.github/scripts/
+
+          # GitHub config singles (lock-aware)
+          maybe_copy .github/dependabot.yml      .github/dependabot.yml
+          maybe_copy .github/renovate.json       .github/renovate.json
+          maybe_copy .github/release-drafter.yml .github/release-drafter.yml
+          # docs/src/docs/index.tmpl is what update-versions.groovy renders the
+          # gh-pages version index from — it must stay in the ${TOKEN} form the
+          # script substitutes, so it is synced (lock-aware) rather than left to
+          # drift on its own like the rest of docs/.
+          maybe_copy docs/src/docs/index.tmpl docs/src/docs/index.tmpl
+
+          # .github/dependency-graph/external-references.yml is intentionally
+          # NOT synced: its purl names this specific project's Maven
+          # coordinates, so it is per-repo metadata, not shared infrastructure.
+
+          # Agent skills. Only remove skill directories that the template itself
+          # ships (skip the template-only enhance-plugin-with-template) so any
+          # skill a child repo added on its own is left alone — no --delete here.
+          mkdir -p target/.agents/skills/
+          for skill_dir in source/.agents/skills/*/; do
+            name=$(basename "${skill_dir}")
+            [ "${name}" = "enhance-plugin-with-template" ] && continue
+            rm -rf "target/.agents/skills/${name}"
+          done
+          rsync -a --exclude='skills/enhance-plugin-with-template/' \
+            source/.agents/ target/.agents/
+          # legacy location, replaced by .agents/skills/
+          rm -rf target/.skills
+          # .claude is a symlink to .agents for Claude Code discovery. If a real
+          # .claude/ directory already exists (e.g. from Claude Code itself),
+          # fold its contents into .agents/ before replacing it with the symlink
+          # so nothing under it is lost.
+          if [ -L target/.claude ]; then
+            : # already the expected symlink
+          elif [ -d target/.claude ]; then
+            rsync -a target/.claude/ target/.agents/
+            rm -rf target/.claude
+            ln -s .agents target/.claude
+            if [ -f target/.gitignore ] && ! grep -qxF '.claude/settings.local.json' target/.gitignore; then
+              printf '\n# Claude Code local settings (not synced)\n.claude/settings.local.json\n' >> target/.gitignore
+            fi
+          else
+            ln -s .agents target/.claude
+          fi
+
+          mkdir -p target/build-logic/
+          mapfile -t build_logic_locks < <(lock_excludes build-logic)
+          rsync -a "${build_logic_locks[@]}" source/build-logic/ target/build-logic/
+          mkdir -p target/gradle/
+          rsync -a source/gradle/ target/gradle/
+
+          # Root files (lock-aware)
+          maybe_copy .editorconfig   .editorconfig
+          maybe_copy .sdkmanrc       .sdkmanrc
+          maybe_copy CONTRIBUTING.md CONTRIBUTING.md
+          maybe_copy LICENSE.txt     LICENSE.txt
+          maybe_copy gradlew.bat     gradlew.bat
+
+          # gradlew needs +x
+          if [ ! -f "target/gradlew.lock" ]; then
+            cp source/gradlew target/gradlew
+            chmod +x target/gradlew
+          fi
+
+      - name: "📤 Create Pull Request"
+        id: create-pr
+        uses: peter-evans/create-pull-request@v7
+        with:
+          path: target
+          token: ${{ steps.app-token.outputs.token }}
+          commit-message: "chore: sync files from grails-plugin-template"
+          title: "Sync common files from grails-plugin-template"
+          body: |
+            Syncs common infrastructure files from [grails-plugin-template](https://github.com/grails-plugins/grails-plugin-template).
+
+            **Files updated:**
+            - `.github/workflows/` (CI, release, release-notes, update-contributors, update-versions —
+              combined from the template's own `.github/workflows/` and its child-only
+              `.github/sync/workflows/`)
+            - `.github/scripts/` (update-contributors, update-versions)
+            - `.github/dependabot.yml`, `renovate.json`, `release-drafter.yml`
+            - `docs/src/docs/index.tmpl` (gh-pages version-index template)
+            - `.agents/` (agent skills; `.claude` symlink created/repaired, replaces legacy `.skills/`)
+            - `build-logic/`
+            - `gradle/` (wrapper)
+            - `.editorconfig`, `.sdkmanrc`, `CONTRIBUTING.md`, `gradlew`, `gradlew.bat`, `LICENSE.txt`
+
+            > To lock a single file and prevent future syncs, create a `<filename>.lock` file next to it.
+            > The same works for whole synced trees (`.github/workflows/`, `.github/scripts/`,
+            > `build-logic/`) — a lock file anywhere under one of those directories excludes its
+            > namesake from that sync, e.g. `.github/workflows/ci.yml.lock` keeps your own `ci.yml`.
+            > A workflow named `local-*.yml` is never touched by this sync at all.
+            >
+            > `.github/dependency-graph/external-references.yml` is never synced — its Maven
+            > coordinates are specific to this repository.
+          branch: sync-files-from-template
+          base: ${{ steps.branch.outputs.branch }}
+          labels: "maintenance"
+
+      - name: "🔀 Enable auto-merge"
+        if: steps.create-pr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh pr merge "${{ steps.create-pr.outputs.pull-request-url }}" \
+            --squash \
+            --auto \
+            --delete-branch

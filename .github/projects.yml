@@ -1,0 +1,15 @@
+# Repos registered to receive automated syncs from grails-plugin-template.
+#
+# Each entry is either a plain repo name (sync PRs target the repo's current
+# GitHub-reported default branch) or a map with `repo:` and `branch:` to pin
+# the PR to a specific branch — use this for repos still developing on a
+# maintenance line (e.g. grails-elasticsearch is on 4.0.x while its default
+# branch tracking changes).
+projects:
+  gpc:
+    - export
+    - grails-cookie
+  grails-plugins:
+    - grails-shiro
+    - repo: grails-elasticsearch
+      branch: 4.0.x

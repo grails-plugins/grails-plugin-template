@@ -1,0 +1,23 @@
+---
+project:
+  name: "grails-plugin-template"
+  title: "Grails Plugin Template"
+  description: "A Grails plugin Template, that can be used either as a starting point for a new grails project, or as base for existing plugins that needs a uniform release process"
+  org: "Grails Plugins"
+github:
+  org: "grails-plugins"
+  project: "grails-plugin-template"
+license:
+  name: "Apache-2.0"
+contributors:
+  sbglasius: "Søren Berg Glasius"
+  jdaugherty: "James Daugherty"
+  matrei: "Mattias Reichel"
+versions:
+  current: "1.0.0"
+  previous:
+  - "1.0.0"
+  - "0.1.0-SNAPSHOT" 
+  ignore:
+  - "1.0.x"
+  - "snapshot"
