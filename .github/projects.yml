@@ -11,5 +11,8 @@ projects:
     - grails-cookie
   grails-plugins:
     - grails-shiro
+    - grails-cxf-client
     - repo: grails-elasticsearch
       branch: 4.0.x
+    - repo: grails-cxf
+      branch: 5.0.x
