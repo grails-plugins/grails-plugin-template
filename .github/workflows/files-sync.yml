@@ -199,9 +199,9 @@ jobs:
             ln -s .agents target/.claude
           fi
 
-          mkdir -p target/build-logic/
-          mapfile -t build_logic_locks < <(lock_excludes build-logic)
-          rsync -a "${build_logic_locks[@]}" source/build-logic/ target/build-logic/
+          mkdir -p target/conventions/
+          mapfile -t conventions_locks < <(lock_excludes conventions)
+          rsync -a "${conventions_locks[@]}" source/conventions/ target/conventions/
           mkdir -p target/gradle/
           rsync -a source/gradle/ target/gradle/
 
@@ -237,13 +237,13 @@ jobs:
             - `.github/dependabot.yml`, `renovate.json`, `release-drafter.yml`
             - `docs/src/docs/index.tmpl` (gh-pages version-index template)
             - `.agents/` (agent skills; `.claude` symlink created/repaired, replaces legacy `.skills/`)
-            - `build-logic/`
+            - `conventions/`
             - `gradle/` (wrapper)
             - `.editorconfig`, `.sdkmanrc`, `CONTRIBUTING.md`, `gradlew`, `gradlew.bat`, `LICENSE.txt`
 
             > To lock a single file and prevent future syncs, create a `<filename>.lock` file next to it.
             > The same works for whole synced trees (`.github/workflows/`, `.github/scripts/`,
-            > `build-logic/`) — a lock file anywhere under one of those directories excludes its
+            > `conventions/`) — a lock file anywhere under one of those directories excludes its
             > namesake from that sync, e.g. `.github/workflows/ci.yml.lock` keeps your own `ci.yml`.
             > A workflow named `local-*.yml` is never touched by this sync at all.
             >

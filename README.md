@@ -11,7 +11,7 @@ automated CI/CD workflows, and publishing configuration.
 Use this repository as the starting point when creating a new Grails plugin under the
 `grails-plugins` or `gpc` organisations. It provides:
 
-- Multi-project Gradle build with convention plugins in `build-logic/`
+- Multi-project Gradle build with convention plugins in `conventions/`
 - An example Grails app under `examples/app1/` for integration testing
 - Automated dependency updates via Dependabot and Renovate
 - GitHub Actions workflows for CI, publishing, release notes, and documentation
@@ -47,7 +47,7 @@ following files carry plugin-specific values and must be updated:
 | `README.md`                                                    | Rewrite for your plugin: badges, a short description, an installation snippet, and a link to the published documentation                                             |
 | `AGENTS.md`                                                    | Update the project overview, artifact names, example-app paths, and version                                                                                          |
 
-Do **not** edit `build-logic/`, `gradle/`, `.github/workflows/`, `.github/scripts/`, `.agents/`,
+Do **not** edit `conventions/`, `gradle/`, `.github/workflows/`, `.github/scripts/`, `.agents/`,
 `CONTRIBUTING.md`, or `LICENSE.txt` in your plugin repository — these are managed by this template
 and kept up to date via the automated file sync. Finally, register your plugin in
 `.github/projects.yml` **in this repository** so it receives future template updates.

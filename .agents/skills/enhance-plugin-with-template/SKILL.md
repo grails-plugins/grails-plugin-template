@@ -1,6 +1,6 @@
 ---
 name: enhance-plugin-with-template
-description: Migrate an existing Grails plugin repository onto the grails-plugin-template build structure (plugin/, examples/, docs/, build-logic/, GitHub Actions CI/CD, Maven Central publishing). Use when asked to migrate, modernise, or restructure a Grails plugin to the template layout.
+description: Migrate an existing Grails plugin repository onto the grails-plugin-template build structure (plugin/, examples/, docs/, conventions/, GitHub Actions CI/CD, Maven Central publishing). Use when asked to migrate, modernise, or restructure a Grails plugin to the template layout.
 ---
 
 # Enhance a Grails Plugin with the Template Structure
@@ -45,7 +45,7 @@ by the automated template sync):
 .github/release-drafter.yml
 .github/dependency-graph/external-references.yml   # then set your purl, see Phase 7
 .agents/                    # agent skills; then symlink: ln -s .agents .claude
-build-logic/
+conventions/
 gradle/                     # wrapper jar + properties
 gradlew                     # keep executable bit (chmod +x)
 gradlew.bat
@@ -69,7 +69,7 @@ Target layout:
 │   └── src/
 ├── examples/<name>/     # example app(s): integration & functional tests
 ├── docs/                # Asciidoctor documentation module
-├── build-logic/         # copied — do not edit
+├── conventions/         # copied — do not edit
 ├── gradle/              # copied — do not edit
 ├── code-coverage/       # aggregation module (build.gradle only)
 ├── build.gradle
@@ -98,7 +98,7 @@ project(':docs').name = 'grails-my-plugin-docs'
 include('code-coverage')
 ```
 
-Keep the rest (pluginManagement, `includeBuild('./build-logic')`, buildCache, examples
+Keep the rest (pluginManagement, `includeBuild('./conventions')`, buildCache, examples
 auto-discovery, dependencyResolutionManagement) exactly as in the template.
 
 **`gradle.properties`** — copy from the template and set:
@@ -274,7 +274,7 @@ projects:
 1. `sdk env install` — tool versions from `.sdkmanrc`.
 2. `./gradlew build` — plugin unit tests + example-app integration tests.
 3. `./gradlew docs` — Asciidoctor output under `build/docs`.
-4. Re-run the Phase 7 grep — zero template references left outside `build-logic/`, `.agents/`, `gradle/`.
+4. Re-run the Phase 7 grep — zero template references left outside `conventions/`, `.agents/`, `gradle/`.
 5. Ensure a `gh-pages` branch exists (create an orphan one if not) — docs publishing and the
    version index push to it.
 6. Open a PR and **watch the full CI run**, including the `publish` and `update-index` jobs — most
