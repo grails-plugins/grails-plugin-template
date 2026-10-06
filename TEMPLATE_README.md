@@ -10,7 +10,7 @@ a **migration target** for an existing plugin that needs a uniform build and rel
 Once a plugin is in the template format it gets:
 
 - A consistent multi-project Gradle build (`plugin/`, `examples/`, `docs/`)
-- Convention plugins in `build-logic/` that handle compilation, testing, publishing, docs, and asset pipeline
+- Convention plugins in `conventions/` that handle compilation, testing, publishing, docs, and asset pipeline
 - GitHub Actions for CI, snapshot publishing, multi-stage releases to Maven Central, release notes, contributor
   tracking, and version index updates
 - Automated file sync: when a new template release is published, a PR is opened in every registered plugin repo to keep
@@ -75,7 +75,7 @@ repo; they are managed by the template sync:
 .github/release-drafter.yml
 .github/dependency-graph/
 .agents/                    # agent skills (symlink .claude -> .agents for Claude Code)
-build-logic/
+conventions/
 gradle/
 .editorconfig
 .sdkmanrc
@@ -97,7 +97,7 @@ my-plugin/
 ├── examples/
 │   └── app1/        # Integration / functional tests
 ├── docs/            # Asciidoctor documentation
-├── build-logic/     # (copied from template — do not edit)
+├── conventions/     # (copied from template — do not edit)
 ├── gradle/          # (copied from template — do not edit)
 ├── build.gradle
 ├── settings.gradle
@@ -208,6 +208,32 @@ versions:
 The `contributors` and `versions` blocks are maintained automatically by GitHub Actions — you do not need to edit them
 by hand after the initial setup.
 
+### Protected branches
+
+The `update-contributors` and `update-versions` workflows write these blocks back into `project.yml` on the default
+branch. Both go through `.github/scripts/commit-or-pr.sh`, which tries a direct push first and only falls back to a
+pull request if that push is rejected. So:
+
+- **Unprotected default branch** — the commit lands directly, exactly as before. No PR is created.
+- **Protected default branch** — the commit is parked on a `chore/update-contributors` or `chore/update-versions`
+  branch and a PR is opened against the default branch, then put into auto-merge (squash).
+
+No repository configuration is required for this — both workflows handle the two things that would otherwise stall
+such a PR:
+
+- **Required status checks.** A PR opened with `GITHUB_TOKEN` never triggers workflows, so required checks would
+  never report and the PR could never merge. Both workflows therefore mint a token from the org's GitHub App
+  (`APP_ID` / `APP_PRIVATE_KEY`, the same credentials `files-sync.yml` uses) when those secrets are present, and only
+  fall back to `GITHUB_TOKEN` where they are not. With the App token, CI runs on the chore PR normally.
+- **"Allow auto-merge" switched off.** `gh pr merge --auto` fails on such a repo, so the script falls back to watching
+  the checks itself and then merging directly. Set `MERGE_WAIT_SECONDS` (default `900`) to change how long it waits.
+
+If the PR still cannot be merged — required reviews, a failing check, a conflict — the script logs a `::warning::`
+naming the PR and **exits 0**, so a chore commit never fails the release pipeline. The PR stays open for a human.
+
+The version bump in `gradle.properties` after a release is separate: it is handled by
+`apache/grails-github-actions/post-release@asf` in the `close` job of `release.yml`, which already opens a PR.
+
 ---
 
 ## `gradle.properties`
@@ -218,11 +244,9 @@ by hand after the initial setup.
 | `projectGroup`               | Maven group for the root project and all published subprojects, e.g. `io.github.gpc`.                          |
 | `grailsVersion`              | Grails BOM version to compile and test against, e.g. `7.0.11`.                                                 |
 | `projectsToPublish`          | Comma-separated list of subproject names to include in Maven publishing. Usually just the plugin artifact name. |
-| `checkstyleVersion`          | Checkstyle version used by `config.code-style`.                                                                 |
-| `codenarcVersion`            | CodeNarc version used by `config.code-style`.                                                                  |
-| `jacocoVersion`              | JaCoCo version used by `config.code-coverage` / `config.code-coverage-aggregate`.                               |
-| `asciidoctorVersion`         | Version of the Asciidoctor Gradle plugin used by the `docs` subproject.                                         |
-| `testLoggerVersion`          | Version of the Gradle test-logger plugin.                                                                       |
+| `checkstyleVersion`          | Optional override of the Checkstyle version used by `config.code-style` (default lives in `conventions/`).      |
+| `codenarcVersion`            | Optional override of the CodeNarc version used by `config.code-style`.                                          |
+| `jacocoVersion`              | Optional override of the JaCoCo version used by `config.code-coverage*`.                                        |
 | `ciBuildScanPublish`         | Set to `true` to publish Gradle build scans from CI.                                                            |
 | `ciBuildScanTermsOfUseUrl`   | Build scan terms URL — leave as-is.                                                                             |
 | `ciBuildScanTermsOfUseAgree` | Set to `yes` to agree to build scan terms.                                                                      |
@@ -240,8 +264,6 @@ projectsToPublish=grails-my-plugin
 checkstyleVersion=10.21.4
 codenarcVersion=3.6.0
 jacocoVersion=0.8.12
-asciidoctorVersion=4.0.5
-testLoggerVersion=4.0.0
 ciBuildScanPublish=true
 ciBuildScanTermsOfUseUrl=https://gradle.com/terms-of-service
 ciBuildScanTermsOfUseAgree=yes

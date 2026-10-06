@@ -1,6 +1,6 @@
 import org.gradle.api.initialization.resolve.RepositoriesMode
 
-rootProject.name = 'build-logic'
+rootProject.name = 'grails-plugin-conventions'
 
 dependencyResolutionManagement {
     repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
