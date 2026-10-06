@@ -88,6 +88,12 @@ jobs:
           --continue
           --stacktrace
           --rerun-tasks
+      - name: "🧪 Test convention plugins"
+        # conventions/ is an included build, so `./gradlew build` does not run its tests
+        if: ${{ !contains(github.event.head_commit.message, '[skip tests]') }}
+        run: >
+          ./gradlew -p conventions test
+          --stacktrace
   publish:
     # only run the publishing task on this repo (not on forks), and never in the
     # template repo itself — grails-plugin-template has no Maven coordinates of its
