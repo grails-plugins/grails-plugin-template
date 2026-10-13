@@ -11,7 +11,8 @@
 # default branch: repos with branch protection reject the push and the whole job
 # fails. This helper tries the direct push first — so unprotected repos keep the
 # zero-friction behaviour and produce no PR noise — and only if that is rejected
-# does it park the commit on a chore branch and open a pull request.
+# does it park the commit on a chore branch and open a pull request. That pull
+# request is merged only once its checks pass; otherwise it is left open.
 #
 # Environment:
 #   COMMIT_MESSAGE  required  commit subject (include [skip ci] if wanted)
@@ -20,8 +21,8 @@
 #   PR_BODY         optional  pull request body
 #   BASE_BRANCH     optional  PR base; defaults to the currently checked-out branch
 #   GH_TOKEN        required for the fallback path only (gh authentication)
-#   MERGE_WAIT_SECONDS optional  how long to wait for checks when the repo has
-#                                auto-merge disabled (default 900)
+#   MERGE_WAIT_SECONDS optional  how long to wait for the pull request's checks
+#                                before giving up on merging it (default 900)
 #
 # Arguments: the paths to stage, e.g. `project.yml`.
 
@@ -77,29 +78,32 @@ else
 fi
 
 # --- land the pull request ---------------------------------------------------
-# Preferred path: auto-merge, which lands the PR as soon as any required checks
-# pass without holding this runner open.
-if gh pr merge "${pr_url}" --squash --auto --delete-branch; then
-    echo "Auto-merge enabled on ${pr_url}"
+# Merge only when the checks pass. `gh pr merge --auto` is deliberately not used: on a repository with no required
+# checks it merges at once, before CI has run, so a failing change would land anyway. Instead wait here for the checks
+# to appear and finish; if they fail, time out, or there are none, leave the pull request open for a human.
+
+# Checks attach to the PR shortly after it is opened; give them up to two minutes to register.
+check_count=0
+for _ in $(seq 1 12); do
+    check_count=$(gh pr checks "${pr_url}" --json name --jq 'length' 2>/dev/null || echo 0)
+    [ "${check_count}" -gt 0 ] && break
+    sleep 10
+done
+
+if [ "${check_count}" -eq 0 ]; then
+    echo "::warning::No checks reported on ${pr_url} — not merging it automatically; review and merge it manually"
     exit 0
 fi
 
-# Auto-merge is not available — most often because the repository has "Allow
-# auto-merge" switched off. Do the waiting here instead of leaving the PR for a
-# human: watch the checks, then merge directly.
-echo "Auto-merge unavailable — waiting for checks on ${pr_url}, then merging directly"
-
-# Checks attach to the PR shortly after it is opened; watching too early makes
-# gh report "no checks reported" and return before any have registered.
-sleep 20
-
 wait_seconds="${MERGE_WAIT_SECONDS:-900}"
-timeout "${wait_seconds}" gh pr checks "${pr_url}" --watch --fail-fast \
-    || echo "Checks did not all pass, timed out after ${wait_seconds}s, or none are configured" \
-            "— attempting the merge anyway; branch protection remains the authority"
+if ! timeout "${wait_seconds}" gh pr checks "${pr_url}" --watch --fail-fast; then
+    echo "::warning::Checks on ${pr_url} did not all pass (or took longer than ${wait_seconds}s) — not merging it" \
+         "automatically; fix or merge it manually"
+    exit 0
+fi
 
 if gh pr merge "${pr_url}" --squash --delete-branch; then
     echo "Merged ${pr_url}"
 else
-    echo "::warning::Could not merge ${pr_url} automatically — merge it manually"
+    echo "::warning::Could not merge ${pr_url} automatically (branch protection?) — merge it manually"
 fi
