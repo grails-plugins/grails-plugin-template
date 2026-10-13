@@ -8,8 +8,8 @@ pluginManagement {
         maven { url = 'https://repo.grails.org/grails/restricted' }
     }
 
-    includeBuild('./build-logic') {
-        it.name = 'build-logic'
+    includeBuild('./conventions') {
+        it.name = 'conventions'
     }
 }
 

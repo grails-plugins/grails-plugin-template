@@ -28,13 +28,13 @@ Detailed best practices are documented as skills in `.agents/skills/` (`.claude`
 ## Critical Rules
 
 1. **NEVER add code to the root `build.gradle` to configure subprojects.** No `subprojects {}`, `allprojects {}`, or
-   `configure()` blocks. All shared configuration goes through convention plugins in `build-logic/`.
+   `configure()` blocks. All shared configuration goes through convention plugins in `conventions/`.
 2. **The plugin project contains ONLY plugin code and unit tests.** No integration tests, no functional tests, no
    example controllers or views.
 3. **Example apps under `examples/` host all integration and functional tests.** They depend on the plugin via
    `implementation project(':grails-plugin-template')` and test it as a real consumer would.
 4. **Use Gradle convention plugins to deduplicate.** If two or more subprojects share build logic, extract it into a
-   convention plugin in `build-logic/`.
+   convention plugin in `conventions/`.
 5. **Always use lazy Gradle APIs** to avoid eager initialization (`tasks.register()`, `tasks.named()`, `configureEach`,
    `provider {}`).
 
@@ -49,7 +49,7 @@ grails-plugin-template/
 ├── examples/app1/       # Example Grails app
 │   └── grails-app/      #   Controllers and conf for integration testing
 ├── docs/                # Asciidoctor documentation
-├── build-logic/         # Gradle convention plugins (composite build)
+├── conventions/         # Gradle convention plugins (composite build)
 ├── .github/workflows/   # CI, release, and release-notes workflows
 ├── build.gradle         # Root build file (docs + root-publish ONLY)
 ├── settings.gradle      # Multi-project settings
@@ -134,7 +134,7 @@ functional tests added here depend on the plugin as a real consumer would.
 
 ## Build-Logic Convention Plugins
 
-Convention plugins in `build-logic/src/main/groovy/` standardize build configuration:
+Convention plugins in `conventions/src/main/groovy/` standardize build configuration:
 
 | Plugin                 | Purpose                                                                              |
 |------------------------|--------------------------------------------------------------------------------------|
