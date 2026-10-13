@@ -1,6 +1,7 @@
 # Template-only workflow (files-sync.yml does not copy it): when a GitHub release of the template is published,
 # release the conventions Gradle plugin (org.grails.plugins.gradle:grails-plugin-conventions) to Maven Central at the
 # same version. The version is taken from the release tag (v1.2.3 -> 1.2.3), like the child repos' release.yml.
+# Once the plugin is released, files-sync.yml opens the sync PRs that point the registered repos at that version.
 name: "Release Conventions"
 on:
   release:
@@ -157,3 +158,12 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: "⚙️ Run post-release"
         uses: apache/grails-github-actions/post-release@asf
+  sync:
+    name: "Sync Registered Repos"
+    needs: release
+    uses: ./.github/workflows/files-sync.yml
+    with:
+      conventions_version: ${{ github.event.release.tag_name }}
+    permissions:
+      contents: read
+    secrets: inherit

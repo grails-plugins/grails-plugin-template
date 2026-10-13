@@ -10,7 +10,7 @@ a **migration target** for an existing plugin that needs a uniform build and rel
 Once a plugin is in the template format it gets:
 
 - A consistent multi-project Gradle build (`plugin/`, `examples/`, `docs/`)
-- Convention plugins in `conventions/` that handle compilation, testing, publishing, docs, and asset pipeline
+- Convention plugins (published as `grails-plugin-conventions`, sources in `conventions/`) that handle compilation, testing, publishing, docs, and asset pipeline
 - GitHub Actions for CI, snapshot publishing, multi-stage releases to Maven Central, release notes, contributor
   tracking, and version index updates
 - Automated file sync: when a new template release is published, a PR is opened in every registered plugin repo to keep
@@ -75,7 +75,6 @@ repo; they are managed by the template sync:
 .github/release-drafter.yml
 .github/dependency-graph/
 .agents/                    # agent skills (symlink .claude -> .agents for Claude Code)
-conventions/
 gradle/
 .editorconfig
 .sdkmanrc
@@ -97,7 +96,6 @@ my-plugin/
 ├── examples/
 │   └── app1/        # Integration / functional tests
 ├── docs/            # Asciidoctor documentation
-├── conventions/     # (copied from template — do not edit)
 ├── gradle/          # (copied from template — do not edit)
 ├── build.gradle
 ├── settings.gradle
@@ -309,8 +307,14 @@ pluginManagement {
 }
 ```
 
-`plugins { id 'config.compile' }` in the `build.gradle` files stays as it is. Until a repo switches over, it keeps using
-the synced `conventions/` included build.
+`plugins { id 'config.compile' }` in the `build.gradle` files stays as it is.
+
+**You don't write this by hand.** `files-sync.yml` removes `build-logic/` / `conventions/` from the synced repo and
+rewrites `settings.gradle` (between `grails-plugin-conventions` marker comments) to map the plugin ids and add
+`mavenCentral()`. After a template release it uses that release's version, once it is on Maven Central; a manual run
+of the workflow uses the template's current `-SNAPSHOT` and adds the Central snapshots repository. A
+`settings.gradle.lock` file keeps the sync away from `settings.gradle`. Sync PRs are not auto-merged: review them and
+merge when CI is green.
 
 ---
 
