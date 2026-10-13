@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       project:
-        description: 'Specific project to sync (org/repo, e.g. gpc/export). Leave empty to sync all.'
+        description: 'Specific project to sync (org/repo, e.g. gpc/grails-export). Leave empty to sync all.'
         required: false
         type: string
 
