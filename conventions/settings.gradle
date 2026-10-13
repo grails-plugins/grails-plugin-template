@@ -1,5 +1,15 @@
 import org.gradle.api.initialization.resolve.RepositoriesMode
 
+pluginManagement {
+    repositories {
+        if (System.getenv('INCLUDE_MAVEN_LOCAL')) {
+            mavenLocal()
+        }
+        maven { url = 'https://repo.grails.org/grails/restricted' }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'grails-plugin-conventions'
 
 dependencyResolutionManagement {

@@ -1,6 +1,44 @@
 plugins {
     id 'groovy-gradle-plugin'
     id 'maven-publish'
+    id 'org.apache.grails.gradle.grails-publish' version "${grailsPublishVersion}" apply false
+}
+
+// The conventions are versioned and released together with the template: the version is the root project's
+// projectVersion (a -PprojectVersion=... on the command line, as the release workflow passes, takes precedence).
+def rootProperties = new Properties()
+file('../gradle.properties').withInputStream { rootProperties.load(it) }
+version = findProperty('projectVersion') ?: rootProperties.getProperty('projectVersion')
+
+// grails-publish decides between snapshot and release from the version, so apply it only once that is set
+apply plugin: 'org.apache.grails.gradle.grails-publish'
+
+// Published to Maven Central as org.grails.plugins.gradle:grails-plugin-conventions. Consumers resolve the
+// config.* plugin ids through that one artifact (see TEMPLATE_README), so the plugin marker artifacts that
+// java-gradle-plugin generates are not published: their group would be the plugin id (e.g. `config.compile`),
+// which is not a namespace Maven Central accepts.
+grailsPublish {
+    githubSlug = 'grails-plugins/grails-plugin-template'
+    license {
+        name = 'Apache-2.0'
+    }
+    title = 'Grails Plugin Conventions'
+    desc = 'Gradle convention plugins shared by Grails plugin repositories built on grails-plugin-template'
+    organization {
+        name = 'Grails Plugins'
+        url = 'https://github.com/grails-plugins'
+    }
+    developers = [sbglasius: 'Søren Berg Glasius']
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    onlyIf { publication.name == 'maven' }
+}
+
+// Consumers build on the Java version from .sdkmanrc (17 today), so never emit newer bytecode
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 dependencies {

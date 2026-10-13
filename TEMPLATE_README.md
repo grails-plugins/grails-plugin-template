@@ -275,6 +275,41 @@ org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1024M
 
 ---
 
+## Publishing the Conventions Plugin
+
+`conventions/` is also published to Maven Central as `org.grails.plugins.gradle:grails-plugin-conventions`, so a
+plugin repo can use the `config.*` plugins without carrying the `conventions/` files.
+
+**Releasing:** the conventions are versioned together with the template — their version is the template's
+`projectVersion`. Publishing a GitHub release of the template (tag `v1.2.3`) runs `release-conventions.yml`
+(template-only, never synced). It tests the plugins, stages the signed artifacts, and — after approval of the
+`release` environment — releases them to Maven Central, then opens the PR that moves `projectVersion` to the next
+snapshot (after approval of the `close` environment), as `release.yml` does in the plugin repos.
+
+**Consuming:** the plugin marker artifacts are not published (their group would be the plugin id, e.g.
+`config.compile`, which Maven Central does not accept), so map the ids to the single artifact in `settings.gradle`:
+
+```groovy
+pluginManagement {
+    repositories {
+        maven { url = 'https://repo.grails.org/grails/restricted' }
+        mavenCentral()
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id.startsWith('config.')) {
+                useModule('org.grails.plugins.gradle:grails-plugin-conventions:1.0.0')
+            }
+        }
+    }
+}
+```
+
+`plugins { id 'config.compile' }` in the `build.gradle` files stays as it is. Until a repo switches over, it keeps using
+the synced `conventions/` included build.
+
+---
+
 ## Registering for Sync
 
 To receive automated infrastructure updates, add your plugin to `.github/projects.yml` in **this template repo** (
