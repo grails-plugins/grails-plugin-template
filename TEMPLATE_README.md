@@ -286,6 +286,10 @@ plugin repo can use the `config.*` plugins without carrying the `conventions/` f
 `release` environment — releases them to Maven Central, then opens the PR that moves `projectVersion` to the next
 snapshot (after approval of the `close` environment), as `release.yml` does in the plugin repos.
 
+**Snapshots:** every push to `main` that touches `conventions/` or `gradle.properties` runs
+`snapshot-conventions.yml` (template-only), which publishes the current `-SNAPSHOT` to Maven Central Snapshots.
+`ci.yml`'s snapshot job stays skipped in the template repo.
+
 **Consuming:** the plugin marker artifacts are not published (their group would be the plugin id, e.g.
 `config.compile`, which Maven Central does not accept), so map the ids to the single artifact in `settings.gradle`:
 
