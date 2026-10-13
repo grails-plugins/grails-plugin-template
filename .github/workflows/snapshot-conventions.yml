@@ -1,0 +1,55 @@
+# Template-only workflow (files-sync.yml does not copy it): publishes a snapshot of the conventions Gradle plugin
+# (org.grails.plugins.gradle:grails-plugin-conventions) to Maven Central Snapshots. ci.yml's own snapshot job is
+# deliberately skipped in the template repo, so this is what keeps the conventions snapshot current.
+name: "Snapshot Conventions"
+on:
+  push:
+    branches:
+      - 'main'
+    paths:
+      - 'conventions/**'
+      - 'gradle.properties'
+      - '.github/workflows/snapshot-conventions.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  JAVA_DISTRIBUTION: 'liberica'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  snapshot:
+    name: "Publish Conventions Snapshot"
+    # only on the template repo itself, not on forks
+    if: ${{ github.repository == 'grails-plugins/grails-plugin-template' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v6
+      - name: "Export .sdkmanrc properties"
+        uses: apache/grails-github-actions/export-gradle-properties@asf
+        with:
+          file: ".sdkmanrc"
+          prefix: "SDKMANRC_"
+      - name: "Determine Java Version"
+        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
+      - name: "☕️ Setup JDK"
+        uses: actions/setup-java@v5
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.SDKMANRC_java }}
+      - name: "🐘 Setup Gradle"
+        uses: gradle/actions/setup-gradle@v5
+      - name: "🧪 Test convention plugins"
+        run: ./gradlew -p conventions test --stacktrace
+      - name: "📤 Publish Snapshot Artifacts"
+        env:
+          GRAILS_PUBLISH_RELEASE: 'false'
+          MAVEN_PUBLISH_URL: 'https://central.sonatype.com/repository/maven-snapshots/'
+          MAVEN_PUBLISH_USERNAME: ${{ secrets.NEXUS_PUBLISH_USERNAME }}
+          MAVEN_PUBLISH_PASSWORD: ${{ secrets.NEXUS_PUBLISH_PASSWORD }}
+        run: >
+          ./gradlew -p conventions publish
+          --no-build-cache
+          --rerun-tasks
