@@ -7,7 +7,7 @@
 # branch tracking changes).
 projects:
   gpc:
-    - export
+    - grails-export
 #    - grails-cookie
   grails-plugins:
     - i18n-enums
