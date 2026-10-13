@@ -164,6 +164,7 @@ jobs:
     uses: ./.github/workflows/files-sync.yml
     with:
       conventions_version: ${{ github.event.release.tag_name }}
+      source_ref: ${{ github.event.release.tag_name }}
     permissions:
       contents: read
     secrets: inherit

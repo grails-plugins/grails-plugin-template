@@ -9,12 +9,20 @@ on:
         description: 'Release version (or v-prefixed tag) of grails-plugin-conventions the synced repos should use'
         required: false
         type: string
+      source_ref:
+        description: 'Ref of the template to sync from (the release tag when called from release-conventions.yml)'
+        required: false
+        type: string
       project:
         description: 'Specific project to sync (org/repo). Leave empty to sync all.'
         required: false
         type: string
   workflow_dispatch:
     inputs:
+      conventions_version:
+        description: 'Release version of grails-plugin-conventions to sync to, e.g. 1.0.0-RC1. Leave empty for the current snapshot.'
+        required: false
+        type: string
       project:
         description: 'Specific project to sync (org/repo, e.g. gpc/grails-export). Leave empty to sync all.'
         required: false
@@ -33,6 +41,10 @@ jobs:
     steps:
       - name: "📥 Checkout repository"
         uses: actions/checkout@v6
+        with:
+          # An explicit ref is needed when called from a release: the pre-release action moves the release tag, and
+          # checkout refuses a tag that no longer points at the commit that triggered the workflow.
+          ref: ${{ inputs.source_ref }}
 
       - name: "Export .sdkmanrc properties"
         uses: apache/grails-github-actions/export-gradle-properties@asf
@@ -119,6 +131,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: source
+          ref: ${{ inputs.source_ref }}
 
       - name: "Export .sdkmanrc properties"
         uses: apache/grails-github-actions/export-gradle-properties@asf
