@@ -421,6 +421,17 @@ if (isTemplate) {
         }
     }
 
+    // ci.yml is synced, but synced repos have no conventions/ directory to test
+    def templateOnlyGuard = "github.repository == 'grails-plugins/grails-plugin-template'"
+    (ciYaml?.jobs?.build?.steps ?: []).each { step ->
+        def run = step.run as String
+        def ifCondition = step.'if' as String
+        if (run != null && run.contains('-p conventions') && (ifCondition == null || !ifCondition.contains(templateOnlyGuard))) {
+            err("ci.yml step '${step.name}' runs against conventions/, which synced repos do not have — " +
+                "its 'if:' must contain \"${templateOnlyGuard}\"")
+        }
+    }
+
     if (!filesSyncText.contains("exclude='files-sync.yml'") && !filesSyncText.contains('exclude=\'files-sync.yml\'')) {
         err("files-sync.yml no longer excludes itself from the workflows it copies — it would sync itself into " +
             "every child repo")
