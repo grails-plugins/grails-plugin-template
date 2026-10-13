@@ -347,3 +347,21 @@ jobs:
           branch: sync-files-from-template
           base: ${{ steps.branch.outputs.branch }}
           labels: "maintenance"
+
+      - name: "🔗 Report sync pull request"
+        env:
+          ORG: ${{ matrix.org }}
+          REPO: ${{ matrix.repo }}
+          PR_URL: ${{ steps.create-pr.outputs.pull-request-url }}
+          PR_OPERATION: ${{ steps.create-pr.outputs.pull-request-operation }}
+          CONVENTIONS_VERSION: ${{ needs.prepare-matrix.outputs.conventions_version }}
+        run: |
+          # Surface the pull request on the run page (annotation) and in the job summary, so a sync across many
+          # repos does not require opening every job log to find the PRs.
+          if [ -n "${PR_URL}" ]; then
+            echo "::notice title=${ORG}/${REPO} — pull request ${PR_OPERATION:-opened}::${PR_URL}"
+            echo "- **${ORG}/${REPO}**: ${PR_OPERATION:-opened} ${PR_URL} (grails-plugin-conventions ${CONVENTIONS_VERSION})" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "::notice title=${ORG}/${REPO} — already up to date::No changes to sync"
+            echo "- **${ORG}/${REPO}**: already up to date (grails-plugin-conventions ${CONVENTIONS_VERSION})" >> "${GITHUB_STEP_SUMMARY}"
+          fi
