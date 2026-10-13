@@ -7,12 +7,14 @@
 # branch tracking changes).
 projects:
   gpc:
+    - grails-cascade-validation
+    - grails-cookie
     - grails-export
-#    - grails-cookie
+    - grails-jasypt
+    - grails-recaptcha
+    - greenmail
   grails-plugins:
+    - grails-cxf-client
+    - repo: grails-cxf
+      branch: 5.0.x
     - i18n-enums
-#    - grails-cxf-client
-#    - repo: grails-elasticsearch
-#      branch: 4.0.x
-#    - repo: grails-cxf
-#      branch: 5.0.x
