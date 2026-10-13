@@ -312,7 +312,8 @@ pluginManagement {
 **You don't write this by hand.** `files-sync.yml` removes `build-logic/` / `conventions/` from the synced repo and
 rewrites `settings.gradle` (between `grails-plugin-conventions` marker comments) to map the plugin ids and add
 `mavenCentral()`. After a template release it uses that release's version, once it is on Maven Central; a manual run
-of the workflow uses the template's current `-SNAPSHOT` and adds the Central snapshots repository. A
+of the workflow uses the template's current `-SNAPSHOT` and adds the Central snapshots repository, unless you give
+it a `conventions_version` (e.g. `1.0.0-RC1`) to re-sync to a release. A
 `settings.gradle.lock` file keeps the sync away from `settings.gradle`. Sync PRs are not auto-merged: review them and
 merge when CI is green.
 
