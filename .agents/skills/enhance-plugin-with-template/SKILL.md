@@ -102,7 +102,9 @@ dependencyResolutionManagement) as in the template. Do not copy `conventions/` a
 `org.grails.plugins.gradle:grails-plugin-conventions` plugin. Add `mavenCentral()` to the pluginManagement
 repositories and the `resolutionStrategy { eachPlugin { ... useModule(...) } }` mapping shown in
 TEMPLATE_README.md ("Publishing the Conventions Plugin"), using the latest released version (the
-files-sync keeps it current afterwards).
+files-sync keeps it current afterwards). Keep the template's marked `buildscript { }` block: it puts the
+Grails, asset-pipeline and grails-publish Gradle plugins on the classpath at the repo's own `grailsVersion`,
+which the conventions need but do not bring themselves.
 
 **`gradle.properties`** — copy from the template and set:
 

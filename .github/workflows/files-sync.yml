@@ -330,8 +330,10 @@ jobs:
             - `.github/dependabot.yml`, `renovate.json`, `release-drafter.yml`
             - `docs/src/docs/index.tmpl` (gh-pages version-index template)
             - `.agents/` (agent skills; `.claude` symlink created/repaired, replaces legacy `.skills/`)
-            - `settings.gradle`: `build-logic/` / `conventions/` removed and the `config.*` plugins mapped to
-              `org.grails.plugins.gradle:grails-plugin-conventions:${{ needs.prepare-matrix.outputs.conventions_version }}`
+            - `settings.gradle`: `build-logic/` / `conventions/` removed, the `config.*` plugins mapped to
+              `org.grails.plugins.gradle:grails-plugin-conventions:${{ needs.prepare-matrix.outputs.conventions_version }}`,
+              and the Grails, asset-pipeline and grails-publish Gradle plugins put on the settings classpath at this
+              repository's `grailsVersion` (the conventions do not bring them, so they work on any Grails line)
             - `gradle/` (wrapper)
             - `.editorconfig`, `.sdkmanrc`, `CONTRIBUTING.md`, `gradlew`, `gradlew.bat`, `LICENSE.txt`
 

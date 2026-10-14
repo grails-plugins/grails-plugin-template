@@ -9,7 +9,9 @@
 //   * removes `includeBuild('./build-logic')` / `includeBuild('./conventions')` from pluginManagement,
 //   * ensures pluginManagement.repositories contains mavenCentral() (and, for a -SNAPSHOT version, the Central
 //     snapshots repository),
-//   * maps every `config.*` plugin id to org.grails.plugins.gradle:grails-plugin-conventions:<version>.
+//   * maps every `config.*` plugin id to org.grails.plugins.gradle:grails-plugin-conventions:<version>,
+//   * puts the Grails, asset-pipeline and grails-publish Gradle plugins on the settings classpath at the repository's
+//     own grailsVersion (the conventions only compile against them, so they work on any Grails line).
 // Everything it adds sits between marker comments, so a later run replaces it instead of duplicating it.
 
 import java.util.regex.Pattern
@@ -56,6 +58,7 @@ def findBlock = { String text, String header, int from ->
 }
 
 def text = settingsFile.getText('UTF-8')
+def mavenLocal = text.contains('INCLUDE_MAVEN_LOCAL')
 
 // Drop what an earlier run added, and the included build the sources used to come from
 text = text.replaceAll(
@@ -100,6 +103,50 @@ if (repositoryLines.size() > 2) {
     def insertAt = text.indexOf('\n', repositories[0]) + 1
     text = text.substring(0, insertAt) + repositoryLines.collect { "        ${it}\n" }.join('') +
             text.substring(insertAt)
+}
+
+// The config.* plugins apply the Grails Gradle plugins without bringing them, so the build has to provide them. They go
+// on the settings classpath, which every project inherits, at the grailsVersion from the repository's gradle.properties.
+def classpathRepositories = [
+        "maven { url = 'https://repo.grails.org/grails/restricted' }",
+]
+if (mavenLocal) {
+    classpathRepositories.addAll(0, [
+            "if (System.getenv('INCLUDE_MAVEN_LOCAL')) {",
+            '    mavenLocal()',
+            '}',
+    ])
+}
+def classpathLines = [
+        'repositories {',
+        *classpathRepositories.collect { "    ${it}" },
+        '}',
+        'dependencies {',
+        '    classpath platform("org.apache.grails:grails-bom:${grailsVersion}")',
+        "    classpath 'org.apache.grails:grails-gradle-plugins'",
+        "    classpath 'cloud.wondrify:asset-pipeline-gradle'",
+        "    classpath 'org.apache.grails.gradle:grails-publish'",
+        '}',
+]
+def buildscript = findBlock(text, /(?m)^buildscript/, 0)
+if (buildscript) {
+    // A settings script can have only one buildscript block, so add to the one that is there
+    def insertAt = text.indexOf('\n', buildscript[0]) + 1
+    text = text.substring(0, insertAt) +
+            ([startMarker, *classpathLines, endMarker].collect { "    ${it}\n" }.join('')) +
+            text.substring(insertAt)
+} else {
+    pluginManagement = findBlock(text, 'pluginManagement', 0)
+    def insertAt = text.indexOf('\n', pluginManagement[1]) + 1
+    def block = [
+            '',
+            startMarker,
+            'buildscript {',
+            *classpathLines.collect { "    ${it}" },
+            '}',
+            endMarker,
+    ].join('\n') + '\n'
+    text = text.substring(0, insertAt) + block + text.substring(insertAt)
 }
 
 text = text.replaceAll(/\n{3,}/, '\n\n')

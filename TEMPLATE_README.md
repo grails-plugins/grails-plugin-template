@@ -317,9 +317,27 @@ pluginManagement {
 
 `plugins { id 'config.compile' }` in the `build.gradle` files stays as it is.
 
+**Grails line:** the conventions only compile against the Grails, asset-pipeline and grails-publish Gradle plugins.
+The consuming repository puts them on its classpath, at its own `grailsVersion`, through a `buildscript` block in
+`settings.gradle`. That way the same conventions release works for Grails 7 (Gradle 8) and Grails 8 (Gradle 9):
+
+```groovy
+buildscript {
+    repositories {
+        maven { url = 'https://repo.grails.org/grails/restricted' }
+    }
+    dependencies {
+        classpath platform("org.apache.grails:grails-bom:${grailsVersion}")
+        classpath 'org.apache.grails:grails-gradle-plugins'
+        classpath 'cloud.wondrify:asset-pipeline-gradle'
+        classpath 'org.apache.grails.gradle:grails-publish'
+    }
+}
+```
+
 **You don't write this by hand.** `files-sync.yml` removes `build-logic/` / `conventions/` from the synced repo and
-rewrites `settings.gradle` (between `grails-plugin-conventions` marker comments) to map the plugin ids and add
-`mavenCentral()`. After a template release it uses that release's version, once it is on Maven Central; a manual run
+rewrites `settings.gradle` (between `grails-plugin-conventions` marker comments) to map the plugin ids, add
+`mavenCentral()` and add the `buildscript` block above. After a template release it uses that release's version, once it is on Maven Central; a manual run
 of the workflow uses the template's current `-SNAPSHOT` and adds the Central snapshots repository, unless you give
 it a `conventions_version` (e.g. `1.0.0-RC1`) to re-sync to a release. A
 `settings.gradle.lock` file keeps the sync away from `settings.gradle`. Sync PRs are not auto-merged: review them and
