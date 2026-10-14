@@ -273,6 +273,14 @@ org.gradle.jvmargs=-Dfile.encoding=UTF-8 -Xmx1024M
 
 ---
 
+## Slack Release Notification
+
+The release workflow of a synced repo ends with a `notify-slack` job that announces the new version (a link to the GitHub
+release plus its release notes) in Slack. It runs after the `release` job, so only for a version that was actually
+released. Configure it by adding a **`SLACK_WEBHOOK_URL`** secret to the repository or its organization (the `gpc`
+organization already has one). Without the secret the job's steps are skipped with a notice, so repos that don't want
+Slack messages need no change.
+
 ## Publishing the Conventions Plugin
 
 `conventions/` is also published to Maven Central as `org.grails.plugins.gradle:grails-plugin-conventions`, so a
