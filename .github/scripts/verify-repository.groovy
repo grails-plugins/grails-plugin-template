@@ -220,7 +220,7 @@ if (docsName && pluginNameStr && docsName != "${pluginNameStr}-docs") {
 
 // Child repos get the conventions as the published grails-plugin-conventions plugin (files-sync.yml points their
 // settings.gradle at it); the template itself includes them from conventions/.
-def usesPublishedConventions = settingsGradleText.contains('grails-plugin-conventions')
+def usesPublishedConventions = settingsGradleText.contains('org.grails.plugins.gradle:grails-plugin-conventions')
 def usesIncludedConventions = (settingsGradleText =~ /includeBuild\(\s*['"]\.\/(build-logic|conventions)['"]/).find()
 if (!usesPublishedConventions && !usesIncludedConventions) {
     err("settings.gradle neither maps the config.* plugins to org.grails.plugins.gradle:grails-plugin-conventions " +
@@ -228,6 +228,12 @@ if (!usesPublishedConventions && !usesIncludedConventions) {
 } else if (!isTemplate && !usesPublishedConventions) {
     warn("settings.gradle still includes the conventions from source — the next files-sync switches it to the " +
          "published grails-plugin-conventions plugin")
+}
+// The conventions only compile against the Grails Gradle plugins, so the build has to put them on its classpath (at its
+// own grailsVersion), or applying config.grails-plugin and friends fails with a NoClassDefFoundError
+if (!(settingsGradleText =~ /classpath\s+['"]org\.apache\.grails:grails-gradle-plugins/).find()) {
+    err("settings.gradle does not put org.apache.grails:grails-gradle-plugins on its buildscript classpath — the " +
+        "config.* plugins need the Grails Gradle plugins from the build (files-sync.yml adds the block)")
 }
 
 def conventionsDir = new File('conventions/src/main/groovy')

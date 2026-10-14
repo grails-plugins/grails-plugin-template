@@ -44,11 +44,16 @@ java {
 dependencies {
     implementation platform("org.apache.grails:grails-bom:${grailsVersion}")
     implementation 'org.apache.groovy:groovy-yaml'
-    implementation 'cloud.wondrify:asset-pipeline-gradle'
     implementation "com.adarshr:gradle-test-logger-plugin:${testLoggerVersion}"
-    implementation 'org.apache.grails:grails-gradle-plugins'
-    implementation 'org.apache.grails.gradle:grails-publish'
     implementation "org.asciidoctor.jvm.convert:org.asciidoctor.jvm.convert.gradle.plugin:${asciidoctorVersion}"
+
+    // The Gradle plugins that follow the Grails line (7.x for Grails 7 / Gradle 8, 8.x for Grails 8 / Gradle 9) are
+    // only compiled against. A runtime dependency would end up in the published POM and force this grailsVersion on
+    // every consumer, so the consumer puts them on its classpath at its own grailsVersion instead (settings.gradle).
+    compileOnly platform("org.apache.grails:grails-bom:${grailsVersion}")
+    compileOnly 'cloud.wondrify:asset-pipeline-gradle'
+    compileOnly 'org.apache.grails:grails-gradle-plugins'
+    compileOnly 'org.apache.grails.gradle:grails-publish'
 
     testImplementation gradleTestKit()
     // Gradle compiles plugins with its embedded Groovy 3, so the Groovy 4 Spock artifact from the bom can't be used
@@ -57,6 +62,10 @@ dependencies {
 
 tasks.withType(Test).configureEach {
     useJUnitPlatform()
+    // GrailsLineSpec builds a consumer on each Grails line (the Grails 8 one needs Java 21 to run the tests)
+    systemProperty('grailsVersion', grailsVersion)
+    systemProperty('grails8Version', grails8Version)
+    systemProperty('grails8Gradle', grails8GradleVersion)
 }
 
 // testImplementation extends implementation, which brings Groovy 4 (groovy-yaml); the tests must run on Gradle's Groovy 3
