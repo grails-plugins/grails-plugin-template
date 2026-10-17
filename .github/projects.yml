@@ -13,6 +13,7 @@ projects:
     - grails-jasypt
     - grails-recaptcha
     - greenmail
+    - grails-phone-number-constraint
   grails-plugins:
     - grails-cxf-client
     - repo: grails-cxf

@@ -75,14 +75,14 @@ repo; they are managed by the template sync:
 .github/release-drafter.yml
 .github/dependency-graph/
 .agents/                    # agent skills (symlink .claude -> .agents for Claude Code)
-gradle/
 .editorconfig
-.sdkmanrc
 CONTRIBUTING.md
-gradlew
-gradlew.bat
 LICENSE.txt
 ```
+
+Also copy `.sdkmanrc` and the Gradle wrapper (`gradle/wrapper/`, `gradlew`, `gradlew.bat`) as a starting point.
+These are **not** synced: the Java, Gradle and Groovy versions are yours to maintain (e.g. Gradle 9 for Grails 8).
+CI fails if the `gradle` version in `.sdkmanrc` and the wrapper's `distributionUrl` disagree.
 
 ### Step 2 — Adopt the multi-project layout
 

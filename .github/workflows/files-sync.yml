@@ -286,21 +286,16 @@ jobs:
               rm -rf "target/${legacy_dir}"
             fi
           done
-          mkdir -p target/gradle/
-          rsync -a source/gradle/ target/gradle/
+
+          # .sdkmanrc and the Gradle wrapper (gradle/wrapper/, gradlew, gradlew.bat) are intentionally NOT synced:
+          # the Java/Gradle/Groovy versions follow the Grails line a repo is on (e.g. Grails 8 needs Gradle 9), so
+          # they are the plugin maintainer's to choose. verify-repository.groovy still fails CI when .sdkmanrc's
+          # gradle version and the wrapper's distributionUrl disagree.
 
           # Root files (lock-aware)
           maybe_copy .editorconfig   .editorconfig
-          maybe_copy .sdkmanrc       .sdkmanrc
           maybe_copy CONTRIBUTING.md CONTRIBUTING.md
           maybe_copy LICENSE.txt     LICENSE.txt
-          maybe_copy gradlew.bat     gradlew.bat
-
-          # gradlew needs +x
-          if [ ! -f "target/gradlew.lock" ]; then
-            cp source/gradlew target/gradlew
-            chmod +x target/gradlew
-          fi
 
       - name: "🔗 Point settings.gradle at grails-plugin-conventions ${{ needs.prepare-matrix.outputs.conventions_version }}"
         run: |
@@ -334,8 +329,10 @@ jobs:
               `org.grails.plugins.gradle:grails-plugin-conventions:${{ needs.prepare-matrix.outputs.conventions_version }}`,
               and the Grails, asset-pipeline and grails-publish Gradle plugins put on the settings classpath at this
               repository's `grailsVersion` (the conventions do not bring them, so they work on any Grails line)
-            - `gradle/` (wrapper)
-            - `.editorconfig`, `.sdkmanrc`, `CONTRIBUTING.md`, `gradlew`, `gradlew.bat`, `LICENSE.txt`
+            - `.editorconfig`, `CONTRIBUTING.md`, `LICENSE.txt`
+
+            `.sdkmanrc` and the Gradle wrapper are not synced — keep them in step yourself (CI fails if
+            `.sdkmanrc`'s gradle version and `gradle/wrapper/gradle-wrapper.properties` disagree).
 
             > To lock a single file and prevent future syncs, create a `<filename>.lock` file next to it.
             > The same works for whole synced trees (`.github/workflows/`, `.github/scripts/`) — a lock file
