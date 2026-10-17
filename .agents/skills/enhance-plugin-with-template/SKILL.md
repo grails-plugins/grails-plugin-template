@@ -45,14 +45,15 @@ by the automated template sync):
 .github/release-drafter.yml
 .github/dependency-graph/external-references.yml   # then set your purl, see Phase 7
 .agents/                    # agent skills; then symlink: ln -s .agents .claude
-gradle/                     # wrapper jar + properties
-gradlew                     # keep executable bit (chmod +x)
-gradlew.bat
 .editorconfig
-.sdkmanrc
 CONTRIBUTING.md
 LICENSE.txt
 ```
+
+Also copy `.sdkmanrc` and the Gradle wrapper (`gradle/wrapper/`, `gradlew` with its executable bit, `gradlew.bat`).
+The sync leaves these alone, so the plugin owns its Java/Gradle/Groovy versions — keep the `gradle` version in
+`.sdkmanrc` equal to the wrapper's `distributionUrl` (`./gradlew wrapper --gradle-version <x>`), or
+`verify-repository.groovy` fails CI.
 
 Also copy `AGENTS.md`, `docs/build.gradle`, `docs/src/docs/index.tmpl`, and `code-coverage/build.gradle`
 as starting points — `AGENTS.md` gets customised in Phase 7; `index.tmpl` must stay untouched.
