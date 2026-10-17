@@ -5,6 +5,7 @@ import java.nio.file.Path
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.util.GradleVersion
+import spock.lang.Requires
 import spock.lang.Specification
 import spock.lang.TempDir
 
@@ -23,7 +24,8 @@ class PluginDocsSpec extends Specification {
         file.text = text
     }
 
-    def 'config.docs aggregates the Groovydoc of the plugin project on Gradle #gradleVersion'() {
+    @Requires({ Runtime.version().feature() >= data.javaVersion })
+    def 'config.docs aggregates the Groovydoc of a Grails #grailsVersion plugin project on Gradle #gradleVersion'() {
         given: 'a root project with config.docs and a plugin project laid out like the template'
         write('settings.gradle', '''
 dependencyResolutionManagement {
@@ -32,12 +34,12 @@ dependencyResolutionManagement {
 rootProject.name = 'sample-root'
 include 'sample'
 ''')
-        write('gradle.properties', "grailsVersion=${System.getProperty('grailsVersion')}\n")
+        write('gradle.properties', "grailsVersion=${grailsVersion}\n")
         write('build.gradle', "plugins { id 'config.docs' }\n")
         write('sample/build.gradle', """
 plugins { id 'groovy' }
 dependencies {
-    implementation platform('org.apache.grails:grails-bom:${System.getProperty('grailsVersion')}')
+    implementation platform('org.apache.grails:grails-bom:${grailsVersion}')
     implementation 'org.apache.groovy:groovy'
 }
 """)
@@ -64,7 +66,12 @@ class Greeter {
         result.task(':aggregateGroovyApiDoc').outcome == TaskOutcome.SUCCESS
         projectDir.resolve('build/docs/gapi/sample/Greeter.html').toFile().file
 
+        and: 'only the sources are taken from the plugin project, its own Groovydoc is not generated'
+        result.task(':sample:groovydoc') == null
+
         where:
-        gradleVersion << [GradleVersion.current().version, System.getProperty('grails8Gradle')].unique()
+        gradleVersion                         | grailsVersion                          | javaVersion
+        GradleVersion.current().version       | System.getProperty('grailsVersion')    | 17
+        System.getProperty('grails8Gradle')   | System.getProperty('grails8Version')   | 21
     }
 }

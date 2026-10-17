@@ -54,12 +54,12 @@ tasks.register('aggregateGroovyApiDoc', Groovydoc) {
     description = 'Generates Groovy API Documentation for the plugin project under build/docs/gapi'
     group = 'documentation'
 
+    // Only the sources are taken from the plugin project's Groovydoc task; the plugin jar is built through classpath
     def upstream = pluginProject.flatMap {
         it.tasks.named('groovydoc', Groovydoc)
     } as Provider<Groovydoc>
 
     dependsOn(tasks.named('cleanDocs'))
-    dependsOn(upstream)
 
     access = GroovydocAccess.PROTECTED
     includeAuthor = false
