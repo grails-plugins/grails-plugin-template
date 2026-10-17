@@ -3,6 +3,11 @@
 // https://github.com/grails-plugins/grails-plugin-template/tree/main/conventions
 import grails.plugins.conventions.PluginDocsExtension
 
+plugins {
+    // Gives the Groovydoc tasks their conventions (Gradle 9 requires the noIndex, noHelp, ... flags) and groovyRuntime
+    id 'groovy-base'
+}
+
 // Defaults follow the template naming convention (<name>-root, <name>, <name>-docs); override them with
 //   pluginDocs { pluginProject = ':my-plugin'; docsProject = ':my-docs' }
 def docsExtension = extensions.create('pluginDocs', PluginDocsExtension)
@@ -11,6 +16,32 @@ docsExtension.docsProject.convention(":${project.name - 'root'}docs".toString())
 
 def docProject = docsExtension.docsProject.map { project(it) }
 def pluginProject = docsExtension.pluginProject.map { project(it) }
+
+// Gradle 9 does not let a task resolve another project's configurations, so the aggregation does not read the plugin
+// project's Groovydoc classpath: it resolves the plugin project (and the Groovy it is built with) through its own
+def aggregateGroovydoc = configurations.dependencyScope('aggregateGroovydoc') {
+    description = 'Dependencies of the aggregated Groovy API documentation'
+}
+aggregateGroovydoc.configure {
+    def grailsVersion = providers.gradleProperty('grailsVersion').orElse(providers.provider {
+        throw new GradleException('config.docs needs grailsVersion in gradle.properties')
+    })
+    dependencies.addLater(grailsVersion.map {
+        project.dependencies.platform("org.apache.grails:grails-bom:${it}")
+    })
+    dependencies.add(project.dependencies.create('org.apache.groovy:groovy'))
+    dependencies.addLater(docsExtension.pluginProject.map { project.dependencies.project(path: it) })
+}
+def aggregateGroovydocClasspath = configurations.resolvable('aggregateGroovydocClasspath') {
+    description = 'Classpath of the aggregated Groovy API documentation'
+    extendsFrom(aggregateGroovydoc.get())
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements, LibraryElements.JAR))
+        attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+    }
+}
 
 tasks.register('cleanDocs', Delete) {
     description = 'Deletes the documentation output'
@@ -23,12 +54,12 @@ tasks.register('aggregateGroovyApiDoc', Groovydoc) {
     description = 'Generates Groovy API Documentation for the plugin project under build/docs/gapi'
     group = 'documentation'
 
+    // Only the sources are taken from the plugin project's Groovydoc task; the plugin jar is built through classpath
     def upstream = pluginProject.flatMap {
         it.tasks.named('groovydoc', Groovydoc)
     } as Provider<Groovydoc>
 
     dependsOn(tasks.named('cleanDocs'))
-    dependsOn(upstream)
 
     access = GroovydocAccess.PROTECTED
     includeAuthor = false
@@ -39,8 +70,8 @@ tasks.register('aggregateGroovyApiDoc', Groovydoc) {
 
     source = { upstream.get().source }
     destinationDir = rootProject.layout.buildDirectory.dir('docs/gapi').get().asFile
-    classpath = files({ upstream.get().classpath })
-    groovyClasspath = files({ upstream.get().groovyClasspath })
+    classpath = aggregateGroovydocClasspath.get()
+    groovyClasspath = groovyRuntime.inferGroovyClasspath(aggregateGroovydocClasspath.get())
 }
 
 tasks.register('docs') {
