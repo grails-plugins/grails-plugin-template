@@ -385,5 +385,5 @@ sdk env install
 | Tool   | Version                         |
 |--------|---------------------------------|
 | Java   | `17.0.18-librca` (Liberica JDK) |
-| Gradle | `8.14.4`                        |
+| Gradle | `8.14.6`                        |
 | Groovy | `4.0.30`                        |

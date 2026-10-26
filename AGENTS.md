@@ -7,7 +7,7 @@ grails project, or as base for existing plugins that needs a uniform release pro
 
 - **Language:** Groovy 4.0.30 on Java 17
 - **Framework:** Grails 7.x
-- **Build System:** Gradle 8.14.4 (with wrapper)
+- **Build System:** Gradle 8.14.6 (with wrapper)
 - **Current Version:** 1.0.0-SNAPSHOT
 - **License:** Apache 2.0
 
@@ -92,7 +92,7 @@ grails-plugin-template/
 Use SDKMAN to install the correct tool versions (see `.sdkmanrc`):
 
 - Java: `17.0.18-librca`
-- Gradle: `8.14.4`
+- Gradle: `8.14.6`
 - Groovy: `4.0.30`
 
 Run `sdk env install` to set up the environment.
