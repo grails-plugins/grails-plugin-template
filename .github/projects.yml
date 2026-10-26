@@ -14,6 +14,7 @@ projects:
     - grails-recaptcha
     - greenmail
     - grails-phone-number-constraint
+    - grails-passwordless-login
   grails-plugins:
     - grails-cxf-client
     - repo: grails-cxf
