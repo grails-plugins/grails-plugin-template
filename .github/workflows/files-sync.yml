@@ -28,9 +28,6 @@ on:
         required: false
         type: string
 
-env:
-  JAVA_DISTRIBUTION: 'liberica'
-
 jobs:
   prepare-matrix:
     if: github.repository == 'grails-plugins/grails-plugin-template'
@@ -45,28 +42,6 @@ jobs:
           # An explicit ref is needed when called from a release: the pre-release action moves the release tag, and
           # checkout refuses a tag that no longer points at the commit that triggered the workflow.
           ref: ${{ inputs.source_ref }}
-
-      - name: "Export .sdkmanrc properties"
-        uses: apache/grails-github-actions/export-gradle-properties@asf
-        with:
-          file: ".sdkmanrc"
-          prefix: "SDKMANRC_"
-
-      - name: "Determine Java Version"
-        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
-
-      - name: "☕️ Setup JDK"
-        uses: actions/setup-java@v6
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.SDKMANRC_java }}
-
-      - name: "🦊 Install Groovy ${{ env.SDKMANRC_groovy }}"
-        run: |
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh"
-          sdk install groovy ${{ env.SDKMANRC_groovy }} < /dev/null
-          echo "$HOME/.sdkman/candidates/groovy/current/bin" >> $GITHUB_PATH
 
       - name: "🏷️ Determine grails-plugin-conventions version"
         id: version
@@ -105,7 +80,7 @@ jobs:
         id: prepare
         env:
           FILTER_PROJECT: ${{ inputs.project }}
-        run: groovy .github/scripts/prepare-sync-matrix.groovy
+        run: bash .github/scripts/groovy.sh .github/scripts/prepare-sync-matrix.groovy
 
   sync-files:
     needs: prepare-matrix
@@ -132,28 +107,6 @@ jobs:
         with:
           path: source
           ref: ${{ inputs.source_ref }}
-
-      - name: "Export .sdkmanrc properties"
-        uses: apache/grails-github-actions/export-gradle-properties@asf
-        with:
-          file: "source/.sdkmanrc"
-          prefix: "SDKMANRC_"
-
-      - name: "Determine Java Version"
-        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
-
-      - name: "☕️ Setup JDK"
-        uses: actions/setup-java@v6
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.SDKMANRC_java }}
-
-      - name: "🦊 Install Groovy ${{ env.SDKMANRC_groovy }}"
-        run: |
-          curl -s "https://get.sdkman.io" | bash
-          source "$HOME/.sdkman/bin/sdkman-init.sh"
-          sdk install groovy ${{ env.SDKMANRC_groovy }} < /dev/null
-          echo "$HOME/.sdkman/candidates/groovy/current/bin" >> $GITHUB_PATH
 
       - name: "📥 Checkout target (${{ matrix.org }}/${{ matrix.repo }})"
         uses: actions/checkout@v7
@@ -302,7 +255,7 @@ jobs:
           if [ -f target/settings.gradle.lock ]; then
             echo "Skipping locked: settings.gradle"
           else
-            groovy source/.github/scripts/update-conventions-reference.groovy \
+            bash source/.github/scripts/groovy.sh source/.github/scripts/update-conventions-reference.groovy \
               target/settings.gradle "${{ needs.prepare-matrix.outputs.conventions_version }}"
           fi
 
@@ -321,7 +274,7 @@ jobs:
             - `.github/workflows/` (CI, release, release-notes, update-contributors, update-versions —
               combined from the template's own `.github/workflows/` and its child-only
               `.github/sync/workflows/`)
-            - `.github/scripts/` (update-contributors, update-versions)
+            - `.github/scripts/` (update-contributors, update-versions, the groovy.sh Docker wrapper that runs them)
             - `.github/dependabot.yml`, `renovate.json`, `release-drafter.yml`
             - `docs/src/docs/index.tmpl` (gh-pages version-index template)
             - `.agents/` (agent skills; `.claude` symlink created/repaired, replaces legacy `.skills/`)

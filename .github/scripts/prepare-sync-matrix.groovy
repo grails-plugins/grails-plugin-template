@@ -1,5 +1,4 @@
 #!/usr/bin/env groovy
-@Grab('org.apache.groovy:groovy-yaml')
 import groovy.json.JsonOutput
 import groovy.yaml.YamlSlurper
 
