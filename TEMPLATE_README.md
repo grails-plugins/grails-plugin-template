@@ -288,13 +288,17 @@ plugin repo can use the `config.*` plugins without carrying the `conventions/` f
 
 **Releasing:** the conventions are versioned together with the template — their version is the template's
 `projectVersion`. Publishing a GitHub release of the template (tag `v1.2.3`) runs `release-conventions.yml`
-(template-only, never synced). It tests the plugins, stages the signed artifacts, and — after approval of the
+(template-only, never synced). It runs `ci-conventions.yml` to test the plugins, stages the signed artifacts, and — after approval of the
 `release` environment — releases them to Maven Central, then opens the PR that moves `projectVersion` to the next
 snapshot (after approval of the `close` environment), as `release.yml` does in the plugin repos.
 
 **Snapshots:** every push to `main` that touches `conventions/` or `gradle.properties` runs
 `snapshot-conventions.yml` (template-only), which publishes the current `-SNAPSHOT` to Maven Central Snapshots.
 `ci.yml`'s snapshot job stays skipped in the template repo.
+
+**Testing:** the conventions are an included build, so `./gradlew build` does not run their tests. The
+template-only `ci-conventions.yml` (never synced) runs `./gradlew -p conventions test` on pushes and pull requests
+that touch `conventions/`, and `release-conventions.yml` reuses it. It keeps `ci.yml` free of conventions references.
 
 **Consuming:** the plugin marker artifacts are not published (their group would be the plugin id, e.g.
 `config.compile`, which Maven Central does not accept), so map the ids to the single artifact in `settings.gradle`:

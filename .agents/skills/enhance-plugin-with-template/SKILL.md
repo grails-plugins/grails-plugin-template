@@ -38,7 +38,8 @@ Copy these **verbatim**; never hand-edit them in the plugin repo afterwards (the
 by the automated template sync):
 
 ```
-.github/workflows/          # EXCLUDE files-sync.yml (template-only)
+.github/workflows/          # EXCLUDE the template-only files-sync.yml, ci-conventions.yml,
+                            #   release-conventions.yml and snapshot-conventions.yml
 .github/scripts/            # EXCLUDE prepare-sync-matrix.groovy (template-only)
 .github/dependabot.yml
 .github/renovate.json

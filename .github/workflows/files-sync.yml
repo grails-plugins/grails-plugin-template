@@ -168,7 +168,7 @@ jobs:
           # the second rsync's --delete wipe out what the first one just added.
           # So stage them into one directory first, then rsync --delete once.
           workflow_stage=$(mktemp -d)
-          rsync -a --exclude='files-sync.yml' --exclude='release-conventions.yml' --exclude='snapshot-conventions.yml' source/.github/workflows/ "${workflow_stage}/"
+          rsync -a --exclude='files-sync.yml' --exclude='release-conventions.yml' --exclude='snapshot-conventions.yml' --exclude='ci-conventions.yml' source/.github/workflows/ "${workflow_stage}/"
           if [ -d source/.github/sync/workflows ]; then
             rsync -a source/.github/sync/workflows/ "${workflow_stage}/"
           fi

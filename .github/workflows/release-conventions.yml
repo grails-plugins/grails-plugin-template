@@ -21,30 +21,11 @@ concurrency:
 jobs:
   test:
     name: "Test Conventions"
-    runs-on: ubuntu-24.04
+    uses: ./.github/workflows/ci-conventions.yml
+    with:
+      ref: ${{ github.event.release.tag_name }}
     permissions:
       contents: read
-    steps:
-      - name: "📥 Checkout repository"
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ env.TAG }}
-      - name: "Export .sdkmanrc properties"
-        uses: apache/grails-github-actions/export-gradle-properties@asf
-        with:
-          file: ".sdkmanrc"
-          prefix: "SDKMANRC_"
-      - name: "Determine Java Version"
-        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
-      - name: "☕️ Setup JDK"
-        uses: actions/setup-java@v6
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.SDKMANRC_java }}
-      - name: "🐘 Setup Gradle"
-        uses: gradle/actions/setup-gradle@v6
-      - name: "🧪 Test convention plugins"
-        run: ./gradlew -p conventions test --stacktrace
   stage:
     name: "Stage Conventions"
     needs: test
