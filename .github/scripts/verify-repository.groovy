@@ -428,6 +428,12 @@ if (isTemplate) {
         }
     }
 
+    def contributorsJob = loadYaml('.github/workflows/update-contributors.yml')?.jobs?.get('update-contributors')
+    if (contributorsJob != null && !((contributorsJob.'if' as String)?.contains(repoGuard))) {
+        err("update-contributors.yml job 'update-contributors' does not guard against running in the template " +
+            "repo itself (expected its 'if:' to contain \"${repoGuard}\")")
+    }
+
     // ci.yml is synced, but synced repos have no conventions/ directory to test
     def templateOnlyGuard = "github.repository == 'grails-plugins/grails-plugin-template'"
     (ciYaml?.jobs?.build?.steps ?: []).each { step ->

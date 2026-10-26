@@ -20,6 +20,8 @@ env:
 
 jobs:
   update-contributors:
+    # Contributors are only maintained in the plugin repos this workflow is synced to
+    if: ${{ github.repository != 'grails-plugins/grails-plugin-template' }}
     runs-on: ubuntu-24.04
     steps:
       # A pull request opened with GITHUB_TOKEN never triggers workflows, so on a
