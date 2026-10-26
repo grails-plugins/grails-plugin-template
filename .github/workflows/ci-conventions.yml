@@ -1,0 +1,71 @@
+# Template-only workflow (files-sync.yml does not copy it): tests the conventions Gradle plugin in conventions/.
+# That directory is an included build, so ci.yml's `./gradlew build` does not run its tests, and synced repos consume
+# the published plugin and have no conventions/ directory. release-conventions.yml reuses this workflow before it
+# stages a release.
+name: "CI Conventions"
+on:
+  push:
+    branches:
+      - '[0-9]+.[0-9]+.x'
+      - 'main'
+    paths:
+      - 'conventions/**'
+      - 'gradle.properties'
+      - '.sdkmanrc'
+      - '.github/workflows/ci-conventions.yml'
+  pull_request:
+    paths:
+      - 'conventions/**'
+      - 'gradle.properties'
+      - '.sdkmanrc'
+      - '.github/workflows/ci-conventions.yml'
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: 'Ref to test (the release tag when called from release-conventions.yml)'
+        required: false
+        type: string
+permissions:
+  contents: read
+env:
+  JAVA_DISTRIBUTION: 'liberica'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  test:
+    name: "Test Conventions"
+    if: ${{ github.repository == 'grails-plugins/grails-plugin-template' && !contains(github.event.head_commit.message, '[skip tests]') }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+      - name: "Export .sdkmanrc properties"
+        uses: apache/grails-github-actions/export-gradle-properties@asf
+        with:
+          file: ".sdkmanrc"
+          prefix: "SDKMANRC_"
+      - name: "Determine Java Version"
+        run: echo "SDKMANRC_java=${{ env.SDKMANRC_java }}" | sed 's/-.*//' >> $GITHUB_ENV
+      - name: "☕️ Setup JDK"
+        uses: actions/setup-java@v6
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.SDKMANRC_java }}
+      - name: "☕️ Setup JDK 21 for the Grails 8 consumer"
+        # GrailsLineSpec also builds a Grails 8 consumer, whose Gradle plugin needs Java 21
+        id: setup-java-21
+        uses: actions/setup-java@v6
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: 21
+          set-default: false
+      - name: "🐘 Setup Gradle"
+        uses: gradle/actions/setup-gradle@v6
+      - name: "🧪 Test convention plugins"
+        env:
+          JAVA_HOME: ${{ steps.setup-java-21.outputs.path }}
+        run: ./gradlew -p conventions test --stacktrace

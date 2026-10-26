@@ -435,20 +435,24 @@ if (isTemplate) {
             "repo itself (expected its 'if:' to contain \"${repoGuard}\")")
     }
 
-    // ci.yml is synced, but synced repos have no conventions/ directory to test
-    def templateOnlyGuard = "github.repository == 'grails-plugins/grails-plugin-template'"
-    (ciYaml?.jobs?.build?.steps ?: []).each { step ->
-        def run = step.run as String
-        def ifCondition = step.'if' as String
-        if (run != null && run.contains('-p conventions') && (ifCondition == null || !ifCondition.contains(templateOnlyGuard))) {
-            err("ci.yml step '${step.name}' runs against conventions/, which synced repos do not have — " +
-                "its 'if:' must contain \"${templateOnlyGuard}\"")
+    // ci.yml is synced, but synced repos have no conventions/ directory — testing it belongs in the template-only
+    // ci-conventions.yml
+    (ciYaml?.jobs ?: [:]).each { jobId, job ->
+        (job?.steps ?: []).each { step ->
+            def run = step.run as String
+            if (run != null && run.contains('-p conventions')) {
+                err("ci.yml step '${step.name}' (job '${jobId}') runs against conventions/, which synced repos do " +
+                    "not have — move it to the template-only ci-conventions.yml")
+            }
         }
     }
 
-    if (!filesSyncText.contains("exclude='files-sync.yml'") && !filesSyncText.contains('exclude=\'files-sync.yml\'')) {
-        err("files-sync.yml no longer excludes itself from the workflows it copies — it would sync itself into " +
-            "every child repo")
+    // Workflows only the template runs must never be copied into a child repo
+    ['files-sync.yml', 'release-conventions.yml', 'snapshot-conventions.yml', 'ci-conventions.yml'].each { name ->
+        if (new File(".github/workflows/${name}").exists() && !filesSyncText.contains("--exclude='${name}'")) {
+            err("files-sync.yml does not exclude the template-only workflow ${name} from the workflows it copies — " +
+                "it would be synced into every child repo")
+        }
     }
     if (!filesSyncText.contains('prepare-sync-matrix.groovy')) {
         warn("files-sync.yml does not mention excluding prepare-sync-matrix.groovy from the scripts it copies")

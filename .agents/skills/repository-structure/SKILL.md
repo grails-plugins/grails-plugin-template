@@ -18,6 +18,7 @@ my-plugin/
 ├── .github/                    # CI/CD workflows and GitHub config
 │   ├── workflows/
 │   │   ├── ci.yml                    # Build, test, publish snapshots
+│   │   ├── ci-conventions.yml        # Tests conventions/ -- template-only, never synced
 │   │   ├── files-sync.yml            # Syncs shared files (incl. skills) to child repos
 │   │   ├── release-notes.yml         # Automated release draft notes
 │   │   ├── update-contributors.yml   # Refreshes contributor list in project.yml
@@ -215,6 +216,8 @@ owns them, and CI fails if `.sdkmanrc`'s `gradle` version differs from the wrapp
 
 - **CI** (`ci.yml`): Builds and tests on every push/PR (`./gradlew build`, which runs unit tests, integration tests, code
   style, and the aggregated JaCoCo report via `check`). Publishes snapshots on push to `main`/release branches.
+- **CI Conventions** (`ci-conventions.yml`): Template-only, never synced. Tests `conventions/` (an included build that
+  `./gradlew build` does not test) on Java 17 and 21; `release-conventions.yml` reuses it before releasing.
 - **Release** (`.github/sync/workflows/release.yml`): 4-job pipeline (stage jar -> release staging repo -> publish docs
   -> update version index) triggered by a published GitHub release. This workflow is synced into child repos only --
   the template repository itself never runs it.

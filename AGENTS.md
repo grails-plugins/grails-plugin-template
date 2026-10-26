@@ -152,6 +152,8 @@ Convention plugins in `conventions/src/main/groovy/` standardize build configura
 
 - **CI** (`.github/workflows/ci.yml`): Builds and tests on push/PR; publishes snapshots to Maven Central Snapshots on
   push to release branches.
+- **CI Conventions** (`.github/workflows/ci-conventions.yml`): Template-only, never synced. Tests `conventions/` on
+  Java 17 and 21; also reused by `release-conventions.yml`.
 - **Release** (`.github/workflows/release.yml`): 4-stage pipeline triggered by GitHub release — stage artifacts, release
   to Maven Central, publish docs to GitHub Pages, bump version.
 - **Release Notes** (`.github/workflows/release-notes.yml`): Auto-drafts release notes using release-drafter with
