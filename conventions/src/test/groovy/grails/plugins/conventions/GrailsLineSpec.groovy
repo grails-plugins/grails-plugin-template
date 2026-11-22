@@ -41,6 +41,12 @@ class GrailsLineSpec extends Specification {
 buildscript {
     repositories {
         maven { url = 'https://repo.grails.org/grails/restricted' }
+        maven {
+            // Grails snapshots, which repo.grails.org does not serve
+            url = 'https://repository.apache.org/content/groups/snapshots'
+            content { includeVersionByRegex('org[.]apache[.](grails|groovy).*', '.*', '.*-SNAPSHOT') }
+            mavenContent { snapshotsOnly() }
+        }
     }
     dependencies {
         classpath platform("org.apache.grails:grails-bom:${grailsVersion}")
@@ -60,10 +66,16 @@ buildscript {
     }
 }
 """ + '''
+// in the order a plugin project applies them (config.compile first, as the template's plugin/build.gradle does)
+apply plugin: 'config.compile'
 apply plugin: 'config.grails-plugin'
 tasks.register('show') {
     def location = org.grails.gradle.plugin.core.GrailsGradlePlugin.protectionDomain.codeSource.location.path
-    doLast { println "grails-gradle-plugins=${location.tokenize('/').last()}" }
+    def indy = tasks.named('compileGroovy').map { it.groovyOptions.optimizationOptions.indy }
+    doLast {
+        println "grails-gradle-plugins=${location.tokenize('/').last()}"
+        println "indy=${indy.getOrNull()}"
+    }
 }
 '''
 
@@ -78,9 +90,13 @@ tasks.register('show') {
         then:
         result.output.contains("grails-gradle-plugins=grails-gradle-plugins-${grailsVersion}.jar")
 
+        and: 'invokedynamic is the Grails 8 and 9 Gradle plugins\' to decide; on Grails 7 the conventions keep classic call sites'
+        result.output.contains("indy=${indy}")
+
         where:
-        gradleVersion                         | grailsVersion                          | javaVersion
-        GradleVersion.current().version       | System.getProperty('grailsVersion')    | 17
-        System.getProperty('grails8Gradle')   | System.getProperty('grails8Version')   | 21
+        gradleVersion                         | grailsVersion                          | javaVersion | indy
+        GradleVersion.current().version       | System.getProperty('grailsVersion')    | 17          | false
+        System.getProperty('grails8Gradle')   | System.getProperty('grails8Version')   | 21          | false
+        System.getProperty('grails9Gradle')   | System.getProperty('grails9Version')   | 21          | null
     }
 }

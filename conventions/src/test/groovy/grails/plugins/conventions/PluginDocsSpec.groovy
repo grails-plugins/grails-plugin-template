@@ -29,7 +29,15 @@ class PluginDocsSpec extends Specification {
         given: 'a root project with config.docs and a plugin project laid out like the template'
         write('settings.gradle', '''
 dependencyResolutionManagement {
-    repositories { mavenCentral() }
+    repositories {
+        mavenCentral()
+        maven {
+            // Grails snapshots
+            url = 'https://repository.apache.org/content/groups/snapshots'
+            content { includeVersionByRegex('org[.]apache[.](grails|groovy).*', '.*', '.*-SNAPSHOT') }
+            mavenContent { snapshotsOnly() }
+        }
+    }
 }
 rootProject.name = 'sample-root'
 include 'sample'
@@ -73,5 +81,6 @@ class Greeter {
         gradleVersion                         | grailsVersion                          | javaVersion
         GradleVersion.current().version       | System.getProperty('grailsVersion')    | 17
         System.getProperty('grails8Gradle')   | System.getProperty('grails8Version')   | 21
+        System.getProperty('grails9Gradle')   | System.getProperty('grails9Version')   | 21
     }
 }

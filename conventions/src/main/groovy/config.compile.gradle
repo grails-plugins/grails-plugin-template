@@ -21,6 +21,11 @@ tasks.withType(JavaCompile).configureEach {
     }
 }
 
+// Grails 8 and later decide invokedynamic in their own Gradle plugin (grails { indy = ... }): Grails 8 compiles classic
+// call sites, Grails 9 invokedynamic, which Groovy 6 needs. Grails 7's Gradle plugin has no such setting, so a Grails 7
+// build keeps the classic call sites these conventions have always compiled.
+boolean grailsDecidesIndy = grailsGradlePluginHasIndySetting(getClass().classLoader)
+
 tasks.withType(GroovyCompile).configureEach {
     options.with {
         compilerArgs.add('-parameters')
@@ -30,12 +35,23 @@ tasks.withType(GroovyCompile).configureEach {
     }
     groovyOptions.with {
         encoding = StandardCharsets.UTF_8.name()
-        optimizationOptions.indy = false
+        if (!grailsDecidesIndy) {
+            optimizationOptions.indy = false
+        }
         parameters = true
     }
     groovyOptions.forkOptions.with {
         memoryMaximumSize = '1g'
         jvmArgs.add('-Xmx1g')
+    }
+}
+
+private static boolean grailsGradlePluginHasIndySetting(ClassLoader loader) {
+    try {
+        Class.forName('org.grails.gradle.plugin.core.GrailsExtension', false, loader).getMethod('getIndy')
+        return true
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
+        return false
     }
 }
 
